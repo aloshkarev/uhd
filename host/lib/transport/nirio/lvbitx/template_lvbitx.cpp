@@ -7,7 +7,7 @@
 #include <streambuf>
 #include <boost/filesystem/path.hpp>
 #include <boost/algorithm/string.hpp>
-#include <regex>
+#include <boost/regex.hpp>
 #include <uhd/utils/paths.hpp>
 
 namespace uhd {{ namespace niusrprio {{

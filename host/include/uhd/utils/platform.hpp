@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_PLATFORM_HPP
+#define INCLUDED_UHD_UTILS_PLATFORM_HPP
 
 #include <stdint.h>
 
@@ -21,3 +22,5 @@ uint32_t get_host_id();
 uint32_t get_process_hash();
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_UTILS_PLATFORM_HPP */

@@ -8,3 +8,4 @@ Transport managers
 """
 
 from .xportmgr_udp import XportMgrUDP
+from .xportmgr_liberio import XportMgrLiberio

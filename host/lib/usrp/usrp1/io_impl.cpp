@@ -16,14 +16,14 @@
 #include <uhd/utils/log.hpp>
 #include <uhd/utils/safe_call.hpp>
 #include <uhd/utils/tasks.hpp>
+#include <boost/bind.hpp>
 #include <boost/format.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/math/special_functions/round.hpp>
 #include <boost/math/special_functions/sign.hpp>
 #include <boost/thread/thread.hpp>
 #include <atomic>
 #include <chrono>
-#include <cmath>
-#include <functional>
-#include <memory>
 #include <thread>
 
 #define bmFR_RX_FORMAT_SHIFT_SHIFT 0
@@ -79,14 +79,14 @@ struct offset_send_buffer
 class offset_managed_send_buffer : public managed_send_buffer
 {
 public:
-    typedef std::function<void(offset_send_buffer&, offset_send_buffer&, size_t)>
+    typedef boost::function<void(offset_send_buffer&, offset_send_buffer&, size_t)>
         commit_cb_type;
     offset_managed_send_buffer(const commit_cb_type& commit_cb) : _commit_cb(commit_cb)
     {
         /* NOP */
     }
 
-    void release(void) override
+    void release(void)
     {
         this->_commit_cb(_curr_buff, _next_buff, size());
     }
@@ -139,11 +139,7 @@ struct usrp1_impl::io_impl
     io_impl(zero_copy_if::sptr data_transport)
         : data_transport(data_transport)
         , curr_buff(offset_send_buffer(data_transport->get_send_buff()))
-        , omsb(std::bind(&usrp1_impl::io_impl::commit_send_buff,
-              this,
-              std::placeholders::_1,
-              std::placeholders::_2,
-              std::placeholders::_3))
+        , omsb(boost::bind(&usrp1_impl::io_impl::commit_send_buff, this, _1, _2, _3))
         , vandal_loop_exit(false)
     {
         /* NOP */
@@ -246,7 +242,7 @@ void usrp1_impl::io_init(void)
     _io_impl->flush_send_buff();
 
     // create a new vandal thread to poll xerflow conditions
-    _io_impl->vandal_task = task::make(std::bind(
+    _io_impl->vandal_task = task::make(boost::bind(
         &usrp1_impl::vandal_conquest_loop, this, std::ref(_io_impl->vandal_loop_exit)));
 }
 
@@ -337,12 +333,12 @@ public:
         _stc           = stc;
     }
 
-    size_t get_num_channels(void) const override
+    size_t get_num_channels(void) const
     {
         return this->size();
     }
 
-    size_t get_max_num_samps(void) const override
+    size_t get_max_num_samps(void) const
     {
         return _max_num_samps;
     }
@@ -351,7 +347,7 @@ public:
         const size_t nsamps_per_buff,
         uhd::rx_metadata_t& metadata,
         const double timeout,
-        const bool one_packet) override
+        const bool one_packet)
     {
         // interleave a "soft" inline message into the receive stream:
         if (_stc->get_inline_queue().pop_with_haste(metadata))
@@ -363,7 +359,7 @@ public:
         return _stc->recv_post(metadata, num_samps_recvd);
     }
 
-    void issue_stream_cmd(const stream_cmd_t& stream_cmd) override
+    void issue_stream_cmd(const stream_cmd_t& stream_cmd)
     {
         _stc->issue_stream_cmd(stream_cmd);
     }
@@ -381,7 +377,7 @@ class usrp1_send_packet_streamer : public sph::send_packet_handler, public tx_st
 public:
     usrp1_send_packet_streamer(const size_t max_num_samps,
         soft_time_ctrl::sptr stc,
-        std::function<void(bool)> tx_enb_fcn)
+        boost::function<void(bool)> tx_enb_fcn)
     {
         _max_num_samps = max_num_samps;
         this->set_max_samples_per_packet(_max_num_samps);
@@ -389,12 +385,12 @@ public:
         _tx_enb_fcn = tx_enb_fcn;
     }
 
-    size_t get_num_channels(void) const override
+    size_t get_num_channels(void) const
     {
         return this->size();
     }
 
-    size_t get_max_num_samps(void) const override
+    size_t get_max_num_samps(void) const
     {
         return _max_num_samps;
     }
@@ -402,7 +398,7 @@ public:
     size_t send(const tx_streamer::buffs_type& buffs,
         const size_t nsamps_per_buff,
         const uhd::tx_metadata_t& metadata,
-        const double timeout_) override
+        const double timeout_)
     {
         double timeout = timeout_; // rw copy
         _stc->send_pre(metadata, timeout);
@@ -426,7 +422,7 @@ public:
         return num_samps_sent;
     }
 
-    bool recv_async_msg(async_metadata_t& async_metadata, double timeout = 0.1) override
+    bool recv_async_msg(async_metadata_t& async_metadata, double timeout = 0.1)
     {
         return _stc->get_async_queue().pop_with_timed_wait(async_metadata, timeout);
     }
@@ -434,7 +430,7 @@ public:
 private:
     size_t _max_num_samps;
     soft_time_ctrl::sptr _stc;
-    std::function<void(bool)> _tx_enb_fcn;
+    boost::function<void(bool)> _tx_enb_fcn;
 };
 
 /***********************************************************************
@@ -517,7 +513,7 @@ uhd::meta_range_t usrp1_impl::get_tx_dsp_host_rates(void)
 double usrp1_impl::update_rx_samp_rate(size_t dspno, const double samp_rate)
 {
     const size_t div  = this->has_rx_halfband() ? 2 : 1;
-    const size_t rate = std::lround(
+    const size_t rate = boost::math::iround(
         _master_clock_rate / this->get_rx_dsp_host_rates().clip(samp_rate, true));
 
     if (rate < 8 and this->has_rx_halfband())
@@ -535,8 +531,8 @@ double usrp1_impl::update_rx_samp_rate(size_t dspno, const double samp_rate)
         this->restore_rx(s);
 
         // update the streamer if created
-        std::shared_ptr<usrp1_recv_packet_streamer> my_streamer =
-            std::dynamic_pointer_cast<usrp1_recv_packet_streamer>(_rx_streamer.lock());
+        boost::shared_ptr<usrp1_recv_packet_streamer> my_streamer =
+            boost::dynamic_pointer_cast<usrp1_recv_packet_streamer>(_rx_streamer.lock());
         if (my_streamer.get() != NULL) {
             my_streamer->set_samp_rate(_master_clock_rate / rate);
         }
@@ -548,7 +544,7 @@ double usrp1_impl::update_rx_samp_rate(size_t dspno, const double samp_rate)
 double usrp1_impl::update_tx_samp_rate(size_t dspno, const double samp_rate)
 {
     const size_t div  = this->has_tx_halfband() ? 4 : 2; // doubled for codec interp
-    const size_t rate = std::lround(
+    const size_t rate = boost::math::iround(
         _master_clock_rate / this->get_tx_dsp_host_rates().clip(samp_rate, true));
 
     if (dspno == 0) { // only care if dsp0 is set since its homogeneous
@@ -558,8 +554,8 @@ double usrp1_impl::update_tx_samp_rate(size_t dspno, const double samp_rate)
         this->restore_tx(s);
 
         // update the streamer if created
-        std::shared_ptr<usrp1_send_packet_streamer> my_streamer =
-            std::dynamic_pointer_cast<usrp1_send_packet_streamer>(_tx_streamer.lock());
+        boost::shared_ptr<usrp1_send_packet_streamer> my_streamer =
+            boost::dynamic_pointer_cast<usrp1_send_packet_streamer>(_tx_streamer.lock());
         if (my_streamer.get() != NULL) {
             my_streamer->set_samp_rate(_master_clock_rate / rate);
         }
@@ -591,7 +587,7 @@ double usrp1_impl::update_rx_dsp_freq(const size_t dspno, const double freq_)
     UHD_ASSERT_THROW(std::abs(freq) <= _master_clock_rate / 2.0);
     static const double scale_factor = std::pow(2.0, 32);
     const int32_t freq_word =
-        int32_t(std::lround((freq / _master_clock_rate) * scale_factor));
+        int32_t(boost::math::round((freq / _master_clock_rate) * scale_factor));
 
     static const uint32_t dsp_index_to_reg_val[4] = {
         FR_RX_FREQ_0, FR_RX_FREQ_1, FR_RX_FREQ_2, FR_RX_FREQ_3};
@@ -660,16 +656,15 @@ rx_streamer::sptr usrp1_impl::get_rx_stream(const uhd::stream_args_t& args_)
     const size_t spp = bpp / convert::get_bytes_per_item(args.otw_format);
 
     // make the new streamer given the samples per packet
-    std::shared_ptr<usrp1_recv_packet_streamer> my_streamer =
-        std::make_shared<usrp1_recv_packet_streamer>(spp, _soft_time_ctrl);
+    boost::shared_ptr<usrp1_recv_packet_streamer> my_streamer =
+        boost::make_shared<usrp1_recv_packet_streamer>(spp, _soft_time_ctrl);
 
     // init some streamer stuff
     my_streamer->set_tick_rate(_master_clock_rate);
     my_streamer->set_vrt_unpacker(&usrp1_bs_vrt_unpacker);
     my_streamer->set_xport_chan_get_buff(0,
-        std::bind(&uhd::transport::zero_copy_if::get_recv_buff,
-            _io_impl->data_transport,
-            std::placeholders::_1));
+        boost::bind(
+            &uhd::transport::zero_copy_if::get_recv_buff, _io_impl->data_transport, _1));
 
     // set the converter
     uhd::convert::id_type id;
@@ -719,17 +714,16 @@ tx_streamer::sptr usrp1_impl::get_tx_stream(const uhd::stream_args_t& args_)
     const size_t spp = bpp / convert::get_bytes_per_item(args.otw_format);
 
     // make the new streamer given the samples per packet
-    std::function<void(bool)> tx_fcn =
-        std::bind(&usrp1_impl::tx_stream_on_off, this, std::placeholders::_1);
-    std::shared_ptr<usrp1_send_packet_streamer> my_streamer =
-        std::make_shared<usrp1_send_packet_streamer>(spp, _soft_time_ctrl, tx_fcn);
+    boost::function<void(bool)> tx_fcn =
+        boost::bind(&usrp1_impl::tx_stream_on_off, this, _1);
+    boost::shared_ptr<usrp1_send_packet_streamer> my_streamer =
+        boost::make_shared<usrp1_send_packet_streamer>(spp, _soft_time_ctrl, tx_fcn);
 
     // init some streamer stuff
     my_streamer->set_tick_rate(_master_clock_rate);
     my_streamer->set_vrt_packer(&usrp1_bs_vrt_packer);
-    my_streamer->set_xport_chan_get_buff(0,
-        std::bind(
-            &usrp1_impl::io_impl::get_send_buff, _io_impl.get(), std::placeholders::_1));
+    my_streamer->set_xport_chan_get_buff(
+        0, boost::bind(&usrp1_impl::io_impl::get_send_buff, _io_impl.get(), _1));
 
     // set the converter
     uhd::convert::id_type id;

@@ -8,11 +8,9 @@
 #include <uhd/utils/log.hpp>
 #include <uhdlib/usrp/common/ad936x_manager.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/make_shared.hpp>
 #include <chrono>
 #include <cmath>
-#include <list>
-#include <memory>
-#include <string>
 #include <thread>
 
 using namespace uhd;
@@ -59,7 +57,7 @@ public:
     /************************************************************************
      * API Calls
      ***********************************************************************/
-    void init_codec() override
+    void init_codec()
     {
         for (const std::string& rx_fe : _rx_frontends) {
             _codec_ctrl->set_gain(rx_fe, DEFAULT_GAIN);
@@ -88,7 +86,7 @@ public:
     // worst case conditions to stress the interface.
     //
     void loopback_self_test(std::function<void(uint32_t)> poker_functor,
-        std::function<uint64_t()> peeker_functor) override
+        std::function<uint64_t()> peeker_functor)
     {
         // Put AD936x in loopback mode
         _codec_ctrl->data_port_loopback(true);
@@ -137,7 +135,7 @@ public:
     }
 
 
-    double get_auto_tick_rate(const double lcm_rate, size_t num_chans) override
+    double get_auto_tick_rate(const double lcm_rate, size_t num_chans)
     {
         UHD_ASSERT_THROW(num_chans >= 1 and num_chans <= _n_frontends);
         const uhd::meta_range_t rate_range = _codec_ctrl->get_clock_rate_range();
@@ -188,7 +186,7 @@ public:
         return new_rate;
     }
 
-    bool check_bandwidth(double rate, const std::string dir) override
+    bool check_bandwidth(double rate, const std::string dir)
     {
         double bw = _bw[dir == "Rx" ? "RX1" : "TX1"];
         if (bw == 0.) // 0 indicates bandwidth is default value.
@@ -210,9 +208,8 @@ public:
         return (rate <= bw);
     }
 
-    void populate_frontend_subtree(uhd::property_tree::sptr subtree,
-        const std::string& key,
-        uhd::direction_t dir) override
+    void populate_frontend_subtree(
+        uhd::property_tree::sptr subtree, const std::string& key, uhd::direction_t dir)
     {
         subtree->create<std::string>("name").set("FE-" + key);
 
@@ -332,5 +329,5 @@ private:
 ad936x_manager::sptr ad936x_manager::make(
     const ad9361_ctrl::sptr& codec_ctrl, const size_t n_frontends)
 {
-    return std::make_shared<ad936x_manager_impl>(codec_ctrl, n_frontends);
+    return boost::make_shared<ad936x_manager_impl>(codec_ctrl, n_frontends);
 }

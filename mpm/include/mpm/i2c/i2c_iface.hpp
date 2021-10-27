@@ -43,17 +43,16 @@ public:
 
     /*!
      * \param tx Buffer of data to send
-     * \param rx_num_bytes Number of bytes to read into rx return buffer
+     * \param rx Buffer to hold read data
      * \param do_close If true, close file descriptor at end of function
-     * \return Buffer of rx data
      *
      * All data in tx will be transmitted.
-     * The amount of data read will be determined by num_rx_bytes and written
-     * into the return buffer.
+     * The amount of data read will be determined by the number of elements
+     * in the rx vector. Those elements will be overwritten with the data.
+     * Use the resize() function for a new rx vector.
      */
-    virtual std::vector<uint8_t> transfer(
-        std::vector<uint8_t>& tx, size_t num_rx_bytes, bool do_close = true) = 0;
-
+    virtual int transfer(
+        std::vector<uint8_t>* tx, std::vector<uint8_t>* rx, bool do_close = true) = 0;
 };
 
 }}; /* namespace mpm::i2c */

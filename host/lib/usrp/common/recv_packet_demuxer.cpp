@@ -26,7 +26,7 @@ public:
     { /*NOP*/
     }
 
-    void release(void) override
+    void release(void)
     {
         delete this;
     }
@@ -56,8 +56,7 @@ public:
         /* NOP */
     }
 
-    managed_recv_buffer::sptr get_recv_buff(
-        const size_t index, const double timeout) override
+    managed_recv_buffer::sptr get_recv_buff(const size_t index, const double timeout)
     {
         boost::mutex::scoped_lock lock(_mutex);
         managed_recv_buffer::sptr buff;

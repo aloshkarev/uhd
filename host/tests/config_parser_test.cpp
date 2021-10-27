@@ -5,6 +5,7 @@
 //
 
 #include <uhdlib/utils/config_parser.hpp>
+#include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstdio>
 #include <fstream>

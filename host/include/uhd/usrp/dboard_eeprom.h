@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_USRP_DBOARD_EEPROM_H
+#define INCLUDED_UHD_USRP_DBOARD_EEPROM_H
 
 #include <uhd/config.h>
 #include <uhd/error.h>
@@ -99,3 +100,5 @@ UHD_API uhd_error uhd_dboard_eeprom_last_error(
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* INCLUDED_UHD_USRP_DBOARD_EEPROM_H */

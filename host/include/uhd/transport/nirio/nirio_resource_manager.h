@@ -6,7 +6,8 @@
 //
 
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_NIRIO_NIRIO_RESOURCE_MANAGER_H
+#define INCLUDED_UHD_TRANSPORT_NIRIO_NIRIO_RESOURCE_MANAGER_H
 
 #include <uhd/transport/nirio/nirio_fifo.h>
 #include <uhd/transport/nirio/niriok_proxy.h>
@@ -57,7 +58,7 @@ public:
     nirio_status get_register_offset(const char* register_name, uint32_t& offset);
 
     template<typename data_t>
-    nirio_status create_tx_fifo(const char* fifo_name, std::shared_ptr< nirio_fifo<data_t> >& fifo)
+    nirio_status create_tx_fifo(const char* fifo_name, boost::shared_ptr< nirio_fifo<data_t> >& fifo)
     {
         nirio_fifo_info_t* fifo_info_ptr = _lookup_fifo_info(fifo_name);
         if (fifo_info_ptr) {
@@ -73,7 +74,7 @@ public:
     }
 
     template<typename data_t>
-    nirio_status create_rx_fifo(const char* fifo_name, std::shared_ptr< nirio_fifo<data_t> >& fifo)
+    nirio_status create_rx_fifo(const char* fifo_name, boost::shared_ptr< nirio_fifo<data_t> >& fifo)
     {
         nirio_fifo_info_t* fifo_info_ptr = _lookup_fifo_info(fifo_name);
         if (fifo_info_ptr) {
@@ -105,3 +106,4 @@ private:
 };
 
 }}
+#endif /* INCLUDED_UHD_TRANSPORT_NIRIO_NIRIO_RESOURCE_MANAGER_H */

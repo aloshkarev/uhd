@@ -5,12 +5,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_UDP_ZERO_COPY_HPP
+#define INCLUDED_UHD_TRANSPORT_UDP_ZERO_COPY_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/transport/zero_copy.hpp>
 #include <uhd/types/device_addr.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace uhd { namespace transport {
 
@@ -33,7 +34,7 @@ public:
         size_t send_buff_size;
     };
 
-    typedef std::shared_ptr<udp_zero_copy> sptr;
+    typedef boost::shared_ptr<udp_zero_copy> sptr;
 
     /*!
      * Make a new zero copy udp transport:
@@ -74,3 +75,5 @@ public:
 };
 
 }} // namespace uhd::transport
+
+#endif /* INCLUDED_UHD_TRANSPORT_UDP_ZERO_COPY_HPP */

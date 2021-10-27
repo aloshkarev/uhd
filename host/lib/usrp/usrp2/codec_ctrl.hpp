@@ -10,12 +10,12 @@
 
 #include "usrp2_iface.hpp"
 #include <uhd/utils/noncopyable.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 class usrp2_codec_ctrl : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<usrp2_codec_ctrl> sptr;
+    typedef boost::shared_ptr<usrp2_codec_ctrl> sptr;
 
     virtual ~usrp2_codec_ctrl(void) = 0;
 

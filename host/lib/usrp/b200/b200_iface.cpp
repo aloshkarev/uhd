@@ -12,6 +12,7 @@
 #include <uhdlib/utils/ihex.hpp>
 #include <libusb.h>
 #include <stdint.h>
+#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/functional/hash.hpp>
@@ -19,7 +20,6 @@
 #include <chrono>
 #include <cstring>
 #include <fstream>
-#include <functional>
 #include <iomanip>
 #include <string>
 #include <thread>
@@ -161,20 +161,18 @@ public:
             timeout); // timeout
     }
 
-    void write_i2c(
-        UHD_UNUSED(uint16_t addr), UHD_UNUSED(const byte_vector_t& bytes)) override
+    void write_i2c(UHD_UNUSED(uint16_t addr), UHD_UNUSED(const byte_vector_t& bytes))
     {
         throw uhd::not_implemented_error("b200 write i2c");
     }
 
 
-    byte_vector_t read_i2c(
-        UHD_UNUSED(uint16_t addr), UHD_UNUSED(size_t num_bytes)) override
+    byte_vector_t read_i2c(UHD_UNUSED(uint16_t addr), UHD_UNUSED(size_t num_bytes))
     {
         throw uhd::not_implemented_error("b200 read i2c");
     }
 
-    void write_eeprom(uint16_t addr, uint16_t offset, const byte_vector_t& bytes) override
+    void write_eeprom(uint16_t addr, uint16_t offset, const byte_vector_t& bytes)
     {
         int ret = fx3_control_write(B200_VREQ_EEPROM_WRITE,
             0,
@@ -193,7 +191,7 @@ public:
                                     .str());
     }
 
-    byte_vector_t read_eeprom(uint16_t addr, uint16_t offset, size_t num_bytes) override
+    byte_vector_t read_eeprom(uint16_t addr, uint16_t offset, size_t num_bytes)
     {
         byte_vector_t recv_bytes(num_bytes);
         int bytes_read = fx3_control_read(B200_VREQ_EEPROM_READ,
@@ -215,8 +213,7 @@ public:
         return recv_bytes;
     }
 
-    void load_firmware(
-        const std::string filestring, UHD_UNUSED(bool force) = false) override
+    void load_firmware(const std::string filestring, UHD_UNUSED(bool force) = false)
     {
         if (load_img_msg) {
             UHD_LOGGER_INFO("B200") << "Loading firmware image: " << filestring << "...";
@@ -224,13 +221,13 @@ public:
 
         ihex_reader file_reader(filestring);
         try {
-            file_reader.read(std::bind(&b200_iface_impl::fx3_control_write,
+            file_reader.read(boost::bind(&b200_iface_impl::fx3_control_write,
                 this,
                 FX3_FIRMWARE_LOAD,
-                std::placeholders::_1,
-                std::placeholders::_2,
-                std::placeholders::_3,
-                std::placeholders::_4,
+                _1,
+                _2,
+                _3,
+                _4,
                 0));
         } catch (const uhd::io_error& e) {
             throw uhd::io_error(
@@ -247,7 +244,7 @@ public:
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    void reset_fx3(void) override
+    void reset_fx3(void)
     {
         unsigned char data[4];
         memset(data, 0x00, sizeof(data));
@@ -265,7 +262,7 @@ public:
                     .str());
     }
 
-    void reset_gpif(void) override
+    void reset_gpif(void)
     {
         unsigned char data[4];
         memset(data, 0x00, sizeof(data));
@@ -284,7 +281,7 @@ public:
                     .str());
     }
 
-    void set_fpga_reset_pin(const bool reset) override
+    void set_fpga_reset_pin(const bool reset)
     {
         unsigned char data[4];
         memset(data, (reset) ? 0xFF : 0x00, sizeof(data));
@@ -304,7 +301,7 @@ public:
         */
     }
 
-    uint8_t get_usb_speed(void) override
+    uint8_t get_usb_speed(void)
     {
         unsigned char rx_data[1];
         memset(rx_data, 0x00, sizeof(rx_data));
@@ -324,7 +321,7 @@ public:
         return boost::lexical_cast<uint8_t>(rx_data[0]);
     }
 
-    uint8_t get_fx3_status(void) override
+    uint8_t get_fx3_status(void)
     {
         unsigned char rx_data[1];
         memset(rx_data, 0x00, sizeof(rx_data));
@@ -346,7 +343,7 @@ public:
         return boost::lexical_cast<uint8_t>(rx_data[0]);
     }
 
-    uint16_t get_compat_num(void) override
+    uint16_t get_compat_num(void)
     {
         unsigned char rx_data[2];
         memset(rx_data, 0x00, sizeof(rx_data));
@@ -485,7 +482,7 @@ public:
         return static_cast<size_t>(filesize);
     }
 
-    uint32_t load_fpga(const std::string filestring, bool force) override
+    uint32_t load_fpga(const std::string filestring, bool force)
     {
         uint8_t fx3_state = 0;
         uint32_t wait_count;
@@ -663,7 +660,7 @@ public:
         return 0;
     }
 
-    uint32_t load_bootloader(const std::string filestring) override
+    uint32_t load_bootloader(const std::string filestring)
     {
         // open bootloader file
         const char* filename = filestring.c_str();

@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_ASSERT_HAS_HPP
+#define INCLUDED_UHD_UTILS_ASSERT_HAS_HPP
 
 #include <uhd/config.hpp>
 #include <string>
@@ -29,3 +30,5 @@ void assert_has(const Range& range, const T& value, const std::string& what = "u
 } // namespace uhd
 
 #include <uhd/utils/assert_has.ipp>
+
+#endif /* INCLUDED_UHD_UTILS_ASSERT_HAS_HPP */

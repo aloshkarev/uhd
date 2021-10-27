@@ -11,6 +11,8 @@
 #include <uhd/utils/math.hpp>
 #include <uhdlib/usrp/cores/dsp_core_utils.hpp>
 #include <uhdlib/usrp/cores/tx_dsp_core_200.hpp>
+#include <boost/assign/list_of.hpp>
+#include <boost/math/special_functions/round.hpp>
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -68,7 +70,7 @@ public:
         this->set_underflow_policy("next_packet");
     }
 
-    void clear(void) override
+    void clear(void)
     {
         _iface->poke32(REG_TX_CTRL_CLEAR, 1); // reset and flush technique
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -87,18 +89,18 @@ public:
                 "USRP TX cannot handle requested underflow policy: " + policy);
     }
 
-    void set_tick_rate(const double rate) override
+    void set_tick_rate(const double rate)
     {
         _tick_rate = rate;
     }
 
-    void set_link_rate(const double rate) override
+    void set_link_rate(const double rate)
     {
         //_link_rate = rate/sizeof(uint32_t); //in samps/s
         _link_rate = rate / sizeof(uint16_t); // in samps/s (allows for 8sc)
     }
 
-    uhd::meta_range_t get_host_rates(void) override
+    uhd::meta_range_t get_host_rates(void)
     {
         meta_range_t range;
         for (int rate = 512; rate > 256; rate -= 4) {
@@ -113,10 +115,10 @@ public:
         return range;
     }
 
-    double set_host_rate(const double rate) override
+    double set_host_rate(const double rate)
     {
         const size_t interp_rate =
-            std::lround(_tick_rate / this->get_host_rates().clip(rate, true));
+            boost::math::iround(_tick_rate / this->get_host_rates().clip(rate, true));
         size_t interp = interp_rate;
 
         // determine which half-band filters are activated
@@ -157,18 +159,18 @@ public:
         const double factor = 1.0 + std::max(ceil_log2(_scaling_adjustment), 0.0);
         const double target_scalar =
             (1 << 17) * _scaling_adjustment / _dsp_extra_scaling / factor;
-        const int32_t actual_scalar = static_cast<int32_t>(std::lround(target_scalar));
+        const int32_t actual_scalar = boost::math::iround(target_scalar);
         _fxpt_scalar_correction =
             target_scalar / actual_scalar * factor; // should be small
         _iface->poke32(REG_DSP_TX_SCALE_IQ, actual_scalar);
     }
 
-    double get_scaling_adjustment(void) override
+    double get_scaling_adjustment(void)
     {
         return _fxpt_scalar_correction * _host_extra_scaling * 32767.;
     }
 
-    double set_freq(const double requested_freq) override
+    double set_freq(const double requested_freq)
     {
         double actual_freq;
         int32_t freq_word;
@@ -177,13 +179,13 @@ public:
         return actual_freq;
     }
 
-    uhd::meta_range_t get_freq_range(void) override
+    uhd::meta_range_t get_freq_range(void)
     {
         return uhd::meta_range_t(
             -_tick_rate / 2, +_tick_rate / 2, _tick_rate / std::pow(2.0, 32));
     }
 
-    void set_updates(const size_t cycles_per_up, const size_t packets_per_up) override
+    void set_updates(const size_t cycles_per_up, const size_t packets_per_up)
     {
         _iface->poke32(REG_TX_CTRL_CYCLES_PER_UP,
             (cycles_per_up == 0) ? 0 : (FLAG_TX_CTRL_UP_ENB | cycles_per_up));
@@ -191,7 +193,7 @@ public:
             (packets_per_up == 0) ? 0 : (FLAG_TX_CTRL_UP_ENB | packets_per_up));
     }
 
-    void setup(const uhd::stream_args_t& stream_args) override
+    void setup(const uhd::stream_args_t& stream_args)
     {
         if (not stream_args.args.has_key("noclear"))
             this->clear();

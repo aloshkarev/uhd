@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_VERSION_H
+#define INCLUDED_UHD_VERSION_H
 
 #include <uhd/config.h>
 #include <uhd/error.h>
@@ -30,3 +31,5 @@ UHD_API uhd_error uhd_get_version_string(
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* INCLUDED_UHD_VERSION_H */

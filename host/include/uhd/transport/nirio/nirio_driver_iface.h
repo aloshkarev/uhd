@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_NIRIO_NIRIO_DRIVER_IFACE_H
+#define INCLUDED_UHD_TRANSPORT_NIRIO_NIRIO_DRIVER_IFACE_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -181,3 +182,5 @@ static const rio_dev_handle_t INVALID_RIO_HANDLE = ((rio_dev_handle_t)-1);
     nirio_status rio_munmap(
         rio_mmap_t &map);
 }
+
+#endif

@@ -6,13 +6,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_PROPERTY_TREE_HPP
+#define INCLUDED_UHD_PROPERTY_TREE_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/utils/noncopyable.hpp>
-#include <functional>
-#include <memory>
-#include <string>
+#include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 #include <vector>
 
 namespace uhd {
@@ -22,14 +23,14 @@ namespace uhd {
  * associated with a property in a uhd::property_tree
  * and registering callbacks when that value changes.
  *
- * A property is defined to have two separate values:
+ * A property is defined to have two separate vales:
  * - Desired value: Value requested by the user
  * - Coerced value: Value that was actually possible
  *                  given HW and other requirements
  *
  * By default, the desired and coerced values are
  * identical as long as the property is not coerced.
- * A property can be coerced in two ways:
+ * A property can be coerced in two way:
  * 1. Using a coercer: A callback function that takes
  *    in a desired value and produces a coerced value.
  *    A property must have *exactly one* coercer.
@@ -68,9 +69,9 @@ template <typename T>
 class property : uhd::noncopyable
 {
 public:
-    typedef std::function<void(const T&)> subscriber_type;
-    typedef std::function<T(void)> publisher_type;
-    typedef std::function<T(const T&)> coercer_type;
+    typedef boost::function<void(const T&)> subscriber_type;
+    typedef boost::function<T(void)> publisher_type;
+    typedef boost::function<T(const T&)> coercer_type;
 
     virtual ~property<T>(void) = 0;
 
@@ -121,7 +122,7 @@ public:
     virtual property<T>& add_coerced_subscriber(const subscriber_type& subscriber) = 0;
 
     /*!
-     * Calls all subscribers with the current value.
+     * Update calls all subscribers w/ the current value.
      *
      * \return a reference to this property for chaining
      * \throws uhd::assertion_error
@@ -213,7 +214,7 @@ UHD_API fs_path operator/(const fs_path&, size_t);
 class UHD_API property_tree : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<property_tree> sptr;
+    typedef boost::shared_ptr<property_tree> sptr;
 
     enum coerce_mode_t { AUTO_COERCE, MANUAL_COERCE };
 
@@ -244,20 +245,21 @@ public:
 
     //! Pop a property off the tree, and returns the property
     template <typename T>
-    std::shared_ptr<property<T>> pop(const fs_path& path);
+    boost::shared_ptr<property<T> > pop(const fs_path& path);
 
 private:
     //! Internal pop function
-    virtual std::shared_ptr<void> _pop(const fs_path& path) = 0;
+    virtual boost::shared_ptr<void> _pop(const fs_path& path) = 0;
 
     //! Internal create property with wild-card type
-    virtual void _create(const fs_path& path,
-        const std::shared_ptr<void>& prop) = 0;
+    virtual void _create(const fs_path& path, const boost::shared_ptr<void>& prop) = 0;
 
     //! Internal access property with wild-card type
-    virtual std::shared_ptr<void>& _access(const fs_path& path) const = 0;
+    virtual boost::shared_ptr<void>& _access(const fs_path& path) const = 0;
 };
 
 } // namespace uhd
 
 #include <uhd/property_tree.ipp>
+
+#endif /* INCLUDED_UHD_PROPERTY_TREE_HPP */

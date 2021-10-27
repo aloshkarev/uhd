@@ -16,7 +16,6 @@ set(util_runtime_sources
     uhd_cal_rx_iq_balance.cpp
     uhd_cal_tx_dc_offset.cpp
     uhd_cal_tx_iq_balance.cpp
-    uhd_adc_self_cal.cpp
 )
 
 #for each source: build an executable and install
@@ -26,18 +25,6 @@ foreach(util_source ${util_runtime_sources})
     target_link_libraries(${util_name} uhd ${Boost_LIBRARIES})
     UHD_INSTALL(TARGETS ${util_name} RUNTIME DESTINATION ${RUNTIME_DIR} COMPONENT utilities)
 endforeach(util_source)
-
-set(CONFIG_PATH "${CMAKE_INSTALL_PREFIX}/${PKG_DATA_DIR}")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/rfnoc_image_builder.py"
-    "${CMAKE_CURRENT_BINARY_DIR}/rfnoc_image_builder"
-)
-UHD_INSTALL(PROGRAMS
-    ${CMAKE_CURRENT_BINARY_DIR}/rfnoc_image_builder
-    RENAME rfnoc_image_builder
-    DESTINATION ${RUNTIME_DIR}
-    COMPONENT utilities
-)
 
 ########################################################################
 # Utilities that get installed into the share path
@@ -50,11 +37,8 @@ set(util_share_sources
 )
 set(util_share_sources_py
     converter_benchmark.py
-    convert_cal_data.py
-    uhd_power_cal.py
 )
 if(ENABLE_USB)
-    find_package(LIBUSB)
     list(APPEND util_share_sources
         fx2_init_eeprom.cpp
     )
@@ -120,7 +104,6 @@ UHD_INSTALL(PROGRAMS
     DESTINATION ${PKG_LIB_DIR}/utils
     COMPONENT utilities
 )
-
 if(LINUX)
     UHD_INSTALL(PROGRAMS
         ${CMAKE_CURRENT_BINARY_DIR}/uhd_images_downloader.py

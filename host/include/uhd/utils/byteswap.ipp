@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_BYTESWAP_IPP
+#define INCLUDED_UHD_UTILS_BYTESWAP_IPP
 
 /***********************************************************************
  * Platform-specific implementation details for byteswap below:
@@ -145,3 +146,5 @@ template <typename T> UHD_INLINE T htowx(T num)
 }
 
 } /* namespace uhd */
+
+#endif /* INCLUDED_UHD_UTILS_BYTESWAP_IPP */

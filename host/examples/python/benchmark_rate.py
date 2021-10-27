@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Copyright 2018 Ettus Research, a National Instruments Company
-# Copyright 2019 Ettus Research, a National Instruments Brand
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
@@ -49,10 +48,6 @@ def parse_args():
                         help="specify the host/cpu sample mode for RX")
     parser.add_argument("--tx_cpu", type=str, default="fc32",
                         help="specify the host/cpu sample mode for TX")
-    parser.add_argument("--rx_stream_args",
-                        help="stream args for RX streamer", default="")
-    parser.add_argument("--tx_stream_args", help="stream args for TX streamer",
-                        default="")
     parser.add_argument("--ref", type=str,
                         help="clock reference (internal, external, mimo, gpsdo)")
     parser.add_argument("--pps", type=str, help="PPS source (internal, external, mimo, gpsdo)")
@@ -91,7 +86,7 @@ def setup_ref(usrp, ref, num_mboards):
     if ref == "mimo":
         if num_mboards != 2:
             logger.error("ref = \"mimo\" implies 2 motherboards; "
-                         "your system has %d boards", num_mboards)
+                          "your system has %d boards", num_mboards)
             return False
         usrp.set_clock_source("mimo", 1)
     else:
@@ -119,7 +114,7 @@ def setup_pps(usrp, pps, num_mboards):
     if pps == "mimo":
         if num_mboards != 2:
             logger.error("ref = \"mimo\" implies 2 motherboards; "
-                         "your system has %d boards", num_mboards)
+                          "your system has %d boards", num_mboards)
             return False
         # make mboard 1 a slave over the MIMO Cable
         usrp.set_time_source("mimo", 1)
@@ -210,18 +205,16 @@ def benchmark_rx_rate(usrp, rx_streamer, random, timer_elapsed_event, rx_statist
             # Reset the overflow flag
             if had_an_overflow:
                 had_an_overflow = False
-                num_rx_dropped += (metadata.time_spec - last_overflow).to_ticks(rate)
+                num_rx_dropped += uhd.types.TimeSpec(
+                    metadata.time_spec.get_real_secs() - last_overflow.get_real_secs()
+                ).to_ticks(rate)
         elif metadata.error_code == uhd.types.RXMetadataErrorCode.overflow:
             had_an_overflow = True
-            # Need to make sure that last_overflow is a new TimeSpec object, not
-            # a reference to metadata.time_spec, or it would not be useful
-            # further up.
-            last_overflow = uhd.types.TimeSpec(
-                metadata.time_spec.get_full_secs(),
-                metadata.time_spec.get_frac_secs())
+            last_overflow = metadata.time_spec
             # If we had a sequence error, record it
             if metadata.out_of_sequence:
                 num_rx_seqerr += 1
+                logger.warning("Detected RX sequence error.")
             # Otherwise just count the overrun
             else:
                 num_rx_overruns += 1
@@ -309,6 +302,7 @@ def benchmark_tx_rate_async_helper(tx_streamer, timer_elapsed_event, tx_async_st
     num_tx_seqerr = 0
     num_tx_underrun = 0
     num_tx_timeouts = 0  # TODO: Not populated yet
+
     try:
         while not timer_elapsed_event.is_set():
             # Receive the async metadata
@@ -318,17 +312,16 @@ def benchmark_tx_rate_async_helper(tx_streamer, timer_elapsed_event, tx_async_st
             # Handle the error codes
             if async_metadata.event_code == uhd.types.TXMetadataEventCode.burst_ack:
                 return
-            if async_metadata.event_code in (
-                    uhd.types.TXMetadataEventCode.underflow,
-                    uhd.types.TXMetadataEventCode.underflow_in_packet):
-                num_tx_underrun += 1
-            elif async_metadata.event_code in (
-                    uhd.types.TXMetadataEventCode.seq_error,
-                    uhd.types.TXMetadataEventCode.seq_error_in_packet):
+            elif ((async_metadata.event_code == uhd.types.TXMetadataEventCode.underflow) or
+                  (async_metadata.event_code == uhd.types.TXMetadataEventCode.underflow_in_packet)):
                 num_tx_seqerr += 1
+            elif ((async_metadata.event_code == uhd.types.TXMetadataEventCode.seq_error) or
+                  (async_metadata.event_code == uhd.types.TXMetadataEventCode.seq_error_in_packet)):
+                num_tx_underrun += 1
             else:
                 logger.warning("Unexpected event on async recv (%s), continuing.",
-                               async_metadata.event_code)
+                                async_metadata.event_code)
+
     finally:
         # Write the statistics back
         tx_async_statistics["num_tx_seqerr"] = num_tx_seqerr
@@ -404,8 +397,8 @@ def main():
         # If the check returned two empty channel lists, that means something went wrong
         return False
     logger.info("Selected %s RX channels and %s TX channels",
-                rx_channels if rx_channels else "no",
-                tx_channels if tx_channels else "no")
+                 rx_channels if rx_channels else "no",
+                 tx_channels if tx_channels else "no")
 
     logger.info("Setting device timestamp to 0...")
     # If any of these conditions are met, we need to synchronize the channels
@@ -426,7 +419,6 @@ def main():
         usrp.set_rx_rate(args.rx_rate)
         st_args = uhd.usrp.StreamArgs(args.rx_cpu, args.rx_otw)
         st_args.channels = rx_channels
-        st_args.args = uhd.types.DeviceAddr(args.rx_stream_args)
         rx_streamer = usrp.get_rx_stream(st_args)
         rx_thread = threading.Thread(target=benchmark_rx_rate,
                                      args=(usrp, rx_streamer, args.random, quit_event,
@@ -445,7 +437,6 @@ def main():
         usrp.set_tx_rate(args.tx_rate)
         st_args = uhd.usrp.StreamArgs(args.tx_cpu, args.tx_otw)
         st_args.channels = tx_channels
-        st_args.args = uhd.types.DeviceAddr(args.tx_stream_args)
         tx_streamer = usrp.get_tx_stream(st_args)
         tx_thread = threading.Thread(target=benchmark_tx_rate,
                                      args=(usrp, tx_streamer, args.random, quit_event,

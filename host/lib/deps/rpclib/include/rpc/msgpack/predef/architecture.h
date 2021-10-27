@@ -18,7 +18,6 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <rpc/msgpack/predef/architecture/parisc.h>
 #include <rpc/msgpack/predef/architecture/ppc.h>
 #include <rpc/msgpack/predef/architecture/pyramid.h>
-#include <rpc/msgpack/predef/architecture/riscv.h>
 #include <rpc/msgpack/predef/architecture/rs6k.h>
 #include <rpc/msgpack/predef/architecture/sparc.h>
 #include <rpc/msgpack/predef/architecture/superh.h>

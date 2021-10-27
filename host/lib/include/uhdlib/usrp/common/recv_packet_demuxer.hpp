@@ -5,19 +5,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_USRP_COMMON_RECV_PACKET_DEMUXER_HPP
+#define INCLUDED_LIBUHD_USRP_COMMON_RECV_PACKET_DEMUXER_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/transport/zero_copy.hpp>
 #include <stdint.h>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace uhd { namespace usrp {
 
 class recv_packet_demuxer
 {
 public:
-    typedef std::shared_ptr<recv_packet_demuxer> sptr;
+    typedef boost::shared_ptr<recv_packet_demuxer> sptr;
 
     virtual ~recv_packet_demuxer(void) = 0;
 
@@ -32,3 +33,5 @@ public:
 };
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_LIBUHD_USRP_COMMON_RECV_PACKET_DEMUXER_HPP */

@@ -12,12 +12,12 @@
 #include <uhd/transport/zero_copy.hpp>
 #include <uhd/types/serial.hpp> //uart iface
 #include <uhd/utils/noncopyable.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 class b200_uart : uhd::noncopyable, public uhd::uart_iface
 {
 public:
-    typedef std::shared_ptr<b200_uart> sptr;
+    typedef boost::shared_ptr<b200_uart> sptr;
     static sptr make(uhd::transport::zero_copy_if::sptr, const uint32_t sid);
     virtual void handle_uart_packet(uhd::transport::managed_recv_buffer::sptr buff) = 0;
 };

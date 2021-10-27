@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_RPC_COMMON_HPP
+#define INCLUDED_RPC_COMMON_HPP
 
 #define USE_BINARY_ARCHIVE 0
 
@@ -21,7 +22,6 @@
 #    include <boost/archive/text_oarchive.hpp>
 #endif
 #include <stdint.h>
-#include <memory>
 
 namespace uhd { namespace usrprio_rpc {
 
@@ -135,9 +135,9 @@ public:
 private:
     std::istringstream _stream;
 #if (USE_BINARY_ARCHIVE)
-    std::unique_ptr<boost::archive::binary_iarchive> _archive;
+    boost::scoped_ptr<boost::archive::binary_iarchive> _archive;
 #else
-    std::unique_ptr<boost::archive::text_iarchive> _archive;
+    boost::scoped_ptr<boost::archive::text_iarchive> _archive;
 #endif
 };
 
@@ -160,3 +160,5 @@ public:
 }} // namespace uhd::usrprio_rpc
 
 #undef USE_BINARY_ARCHIVE
+
+#endif /* INCLUDED_RPC_COMMON_HPP */

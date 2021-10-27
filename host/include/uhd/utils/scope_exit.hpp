@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_SCOPE_EXIT_HPP
+#define INCLUDED_UHD_SCOPE_EXIT_HPP
 
 #include <functional>
 #include <memory>
@@ -40,7 +41,7 @@ public:
 
 private:
     scope_exit(std::function<void(void)>&& exit_cb)
-        : _exit_cb(std::forward<std::function<void(void)>>(exit_cb))
+        : _exit_cb(std::forward<std::function<void(void)> >(exit_cb))
     {
         // nop
     }
@@ -49,3 +50,5 @@ private:
 };
 
 }} // namespace uhd::utils
+
+#endif /* INCLUDED_UHD_SCOPE_EXIT_HPP */

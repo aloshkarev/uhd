@@ -7,10 +7,10 @@
 
 #include <uhd/exception.hpp>
 #include <uhdlib/utils/ihex.hpp>
+#include <boost/bind.hpp>
 #include <boost/format.hpp>
+#include <boost/make_shared.hpp>
 #include <fstream>
-#include <functional>
-#include <memory>
 #include <sstream>
 
 using namespace uhd;
@@ -185,7 +185,7 @@ void ihex_reader::read(ihex_reader::record_handle_type record_handler)
 
 // We need a functor for the cast, a lambda would be perfect...
 int _file_writer_callback(
-    std::shared_ptr<std::ofstream> output_file, unsigned char* buff, uint16_t len)
+    boost::shared_ptr<std::ofstream> output_file, unsigned char* buff, uint16_t len)
 {
     output_file->write((const char*)buff, len);
     return 0;
@@ -193,17 +193,14 @@ int _file_writer_callback(
 
 void ihex_reader::to_bin_file(const std::string& bin_filename)
 {
-    std::shared_ptr<std::ofstream> output_file(std::make_shared<std::ofstream>());
+    boost::shared_ptr<std::ofstream> output_file(boost::make_shared<std::ofstream>());
     output_file->open(bin_filename.c_str(), std::ios::out | std::ios::binary);
     if (not output_file->is_open()) {
         throw uhd::io_error(
             str(boost::format("Could not open file for writing: %s") % bin_filename));
     }
 
-    this->read(std::bind(&_file_writer_callback,
-        output_file,
-        std::placeholders::_3,
-        std::placeholders::_4));
+    this->read(boost::bind(&_file_writer_callback, output_file, _3, _4));
 
     output_file->close();
 }
@@ -224,10 +221,7 @@ std::vector<uint8_t> ihex_reader::to_vector(const size_t size_estimate)
     std::vector<uint8_t> buf;
     buf.reserve(size_estimate == 0 ? DEFAULT_SIZE_ESTIMATE : size_estimate);
 
-    this->read(std::bind(&_vector_writer_callback,
-        std::ref(buf),
-        std::placeholders::_3,
-        std::placeholders::_4));
+    this->read(boost::bind(&_vector_writer_callback, boost::ref(buf), _3, _4));
 
     return buf;
 }

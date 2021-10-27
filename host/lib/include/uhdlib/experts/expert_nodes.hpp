@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_EXPERTS_EXPERT_NODES_HPP
+#define INCLUDED_UHD_EXPERTS_EXPERT_NODES_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/exception.hpp>
@@ -14,9 +15,9 @@
 #include <uhd/utils/noncopyable.hpp>
 #include <stdint.h>
 #include <boost/core/demangle.hpp>
+#include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-#include <functional>
 #include <list>
 #include <memory>
 
@@ -36,7 +37,7 @@ enum node_author_t { AUTHOR_NONE, AUTHOR_USER, AUTHOR_EXPERT };
 class dag_vertex_t : private uhd::noncopyable
 {
 public:
-    typedef std::function<void(std::string)> callback_func_t;
+    typedef boost::function<void(std::string)> callback_func_t;
 
     virtual ~dag_vertex_t() {}
 
@@ -149,13 +150,13 @@ public:
     }
 
     // Basic info
-    const std::string& get_dtype() const override
+    virtual const std::string& get_dtype() const
     {
         static const std::string dtype(boost::core::demangle(typeid(data_t).name()));
         return dtype;
     }
 
-    std::string to_string() const override
+    virtual std::string to_string() const
     {
         return data_node_printer::print(get());
     }
@@ -166,17 +167,17 @@ public:
     }
 
     // Graph resolution specific
-    bool is_dirty() const override
+    virtual bool is_dirty() const
     {
         return _data.is_dirty();
     }
 
-    void mark_clean() override
+    virtual void mark_clean()
     {
         _data.mark_clean();
     }
 
-    void resolve() override
+    void resolve()
     {
         // NOP
     }
@@ -222,34 +223,34 @@ public:
 
 private:
     // External callbacks
-    void set_write_callback(const callback_func_t& func) override
+    virtual void set_write_callback(const callback_func_t& func)
     {
         _wr_callback = func;
     }
 
-    bool has_write_callback() const override
+    virtual bool has_write_callback() const
     {
-        return bool(_wr_callback);
+        return not _wr_callback.empty();
     }
 
-    void clear_write_callback() override
+    virtual void clear_write_callback()
     {
-        _wr_callback = nullptr;
+        _wr_callback.clear();
     }
 
-    void set_read_callback(const callback_func_t& func) override
+    virtual void set_read_callback(const callback_func_t& func)
     {
         _rd_callback = func;
     }
 
-    bool has_read_callback() const override
+    virtual bool has_read_callback() const
     {
-        return bool(_rd_callback);
+        return not _rd_callback.empty();
     }
 
-    void clear_read_callback() override
+    virtual void clear_read_callback()
     {
-        _rd_callback = nullptr;
+        _rd_callback.clear();
     }
 
     boost::recursive_mutex* _callback_mutex;
@@ -306,14 +307,14 @@ template <typename data_t>
 class data_accessor_base : public data_accessor_t
 {
 public:
-    ~data_accessor_base() override {}
+    virtual ~data_accessor_base() {}
 
-    bool is_reader() const override
+    virtual bool is_reader() const
     {
         return _access == ACCESS_READER;
     }
 
-    bool is_writer() const override
+    virtual bool is_writer() const
     {
         return _access == ACCESS_WRITER;
     }
@@ -350,7 +351,7 @@ protected:
     const node_access_t _access;
 
 private:
-    dag_vertex_t& node() const override
+    virtual dag_vertex_t& node() const
     {
         return _vertex;
     }
@@ -499,7 +500,7 @@ protected:
 
 private:
     // Graph resolution specific
-    bool is_dirty() const override
+    virtual bool is_dirty() const
     {
         bool inputs_dirty = false;
         for (data_accessor_t* acc : _inputs) {
@@ -508,43 +509,45 @@ private:
         return inputs_dirty;
     }
 
-    void mark_clean() override
+    virtual void mark_clean()
     {
         for (data_accessor_t* acc : _inputs) {
             acc->node().mark_clean();
         }
     }
 
-    void resolve() override = 0;
+    virtual void resolve() = 0;
 
     // Basic type info
-    const std::string& get_dtype() const override
+    virtual const std::string& get_dtype() const
     {
         static const std::string dtype = "<worker>";
         return dtype;
     }
 
-    std::string to_string() const override
+    virtual std::string to_string() const
     {
         return "<worker>";
     }
 
     // Workers don't have callbacks so implement stubs
-    void set_write_callback(const callback_func_t&) override {}
-    bool has_write_callback() const override
+    virtual void set_write_callback(const callback_func_t&) {}
+    virtual bool has_write_callback() const
     {
         return false;
     }
-    void clear_write_callback() override {}
-    void set_read_callback(const callback_func_t&) override {}
-    bool has_read_callback() const override
+    virtual void clear_write_callback() {}
+    virtual void set_read_callback(const callback_func_t&) {}
+    virtual bool has_read_callback() const
     {
         return false;
     }
-    void clear_read_callback() override {}
+    virtual void clear_read_callback() {}
 
     std::list<data_accessor_t*> _inputs;
     std::list<data_accessor_t*> _outputs;
 };
 
 }} // namespace uhd::experts
+
+#endif /* INCLUDED_UHD_EXPERTS_EXPERT_NODE_HPP */

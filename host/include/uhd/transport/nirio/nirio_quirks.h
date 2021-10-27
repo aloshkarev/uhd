@@ -6,7 +6,8 @@
 //
 
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_NIRIO_NIRIO_QUIRKS_H
+#define INCLUDED_UHD_TRANSPORT_NIRIO_NIRIO_QUIRKS_H
 
 #include <set>
 #include <stdint.h>
@@ -64,3 +65,5 @@ private:
 };
 
 }}
+
+#endif /* INCLUDED_UHD_TRANSPORT_NIRIO_NIRIO_QUIRKS_H */

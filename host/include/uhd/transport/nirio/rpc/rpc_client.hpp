@@ -5,15 +5,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_RPC_CLIENT_HPP
+#define INCLUDED_RPC_CLIENT_HPP
 
 #include "rpc_common.hpp"
 #include <uhd/utils/log.hpp>
 #include <uhd/utils/noncopyable.hpp>
 #include <boost/asio.hpp>
+#include <boost/smart_ptr.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/thread.hpp>
-#include <memory>
 
 namespace uhd { namespace usrprio_rpc {
 
@@ -67,7 +68,7 @@ private:
 
     // Services
     boost::asio::io_service _io_service;
-    std::unique_ptr<boost::thread> _io_service_thread;
+    boost::scoped_ptr<boost::thread> _io_service_thread;
     boost::asio::ip::tcp::socket _socket;
     // Handshake info
     hshake_args_t _hshake_args_client;
@@ -82,3 +83,5 @@ private:
 };
 
 }} // namespace uhd::usrprio_rpc
+
+#endif /* INCLUDED_RPC_CLIENT_HPP */

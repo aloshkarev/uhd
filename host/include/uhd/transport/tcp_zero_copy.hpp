@@ -5,12 +5,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_TCP_ZERO_COPY_HPP
+#define INCLUDED_UHD_TRANSPORT_TCP_ZERO_COPY_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/transport/zero_copy.hpp>
 #include <uhd/types/device_addr.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace uhd { namespace transport {
 
@@ -21,7 +22,7 @@ namespace uhd { namespace transport {
  */
 struct UHD_API tcp_zero_copy : public virtual zero_copy_if
 {
-    ~tcp_zero_copy(void) override;
+    virtual ~tcp_zero_copy(void);
 
     /*!
      * Make a new zero copy TCP transport:
@@ -42,3 +43,5 @@ struct UHD_API tcp_zero_copy : public virtual zero_copy_if
 };
 
 }} // namespace uhd::transport
+
+#endif /* INCLUDED_UHD_TRANSPORT_TCP_ZERO_COPY_HPP */

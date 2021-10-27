@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_USRP_RX_DSP_CORE_3000_HPP
+#define INCLUDED_LIBUHD_USRP_RX_DSP_CORE_3000_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/property_tree.hpp>
@@ -15,7 +16,7 @@
 #include <uhd/types/wb_iface.hpp>
 #include <uhd/usrp/fe_connection.hpp>
 #include <uhd/utils/noncopyable.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 #include <string>
 
 class rx_dsp_core_3000 : uhd::noncopyable
@@ -25,7 +26,7 @@ public:
     static const double DEFAULT_DDS_FREQ;
     static const double DEFAULT_RATE;
 
-    typedef std::shared_ptr<rx_dsp_core_3000> sptr;
+    typedef boost::shared_ptr<rx_dsp_core_3000> sptr;
 
     virtual ~rx_dsp_core_3000(void) = 0;
 
@@ -57,3 +58,5 @@ public:
 
     virtual void populate_subtree(uhd::property_tree::sptr subtree) = 0;
 };
+
+#endif /* INCLUDED_LIBUHD_USRP_RX_DSP_CORE_3000_HPP */

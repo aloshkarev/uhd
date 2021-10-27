@@ -5,12 +5,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_RFNOC_BLOCKDEF_HPP
+#define INCLUDED_LIBUHD_RFNOC_BLOCKDEF_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/device_addr.hpp>
 #include <stdint.h>
-#include <memory>
+#include <boost/enable_shared_from_this.hpp>
 #include <set>
 #include <vector>
 
@@ -18,10 +19,10 @@ namespace uhd { namespace rfnoc {
 
 /*! Reads and stores block definitions for blocks and components.
  */
-class UHD_API blockdef : public std::enable_shared_from_this<blockdef>
+class UHD_RFNOC_API blockdef : public boost::enable_shared_from_this<blockdef>
 {
 public:
-    typedef std::shared_ptr<blockdef> sptr;
+    typedef boost::shared_ptr<blockdef> sptr;
 
     //! Describes port options for a block definition.
     //
@@ -111,3 +112,5 @@ public:
 };
 
 }} /* namespace uhd::rfnoc */
+
+#endif /* INCLUDED_LIBUHD_RFNOC_BLOCKDEF_HPP */

@@ -48,14 +48,14 @@ public:
         return _enum_arg.get();
     }
 
-    inline std::string to_string() const override
+    inline virtual std::string to_string() const
     {
         return _double_arg.to_string() + ", " + _size_t_arg.to_string() + ", "
                + _bool_arg.to_string() + ", " + _enum_arg.to_string();
     }
 
 private:
-    void _parse(const uhd::device_addr_t& dev_args) override
+    virtual void _parse(const uhd::device_addr_t& dev_args)
     {
         if (dev_args.has_key(_double_arg.key()))
             _double_arg.parse(dev_args[_double_arg.key()]);

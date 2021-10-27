@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_USRP_COMPONENT_FILE_HPP
+#define INCLUDED_UHD_USRP_COMPONENT_FILE_HPP
 
 #include <uhd/types/dict.hpp>
 #include <string>
@@ -33,3 +34,5 @@ struct component_file_t
 typedef std::vector<component_file_t> component_files_t;
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_UHD_USRP_COMPONENT_FILE_HPP */

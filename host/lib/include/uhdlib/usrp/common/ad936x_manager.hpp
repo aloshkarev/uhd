@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_AD9361_MANAGER_HPP
+#define INCLUDED_AD9361_MANAGER_HPP
 
 #include <uhd/property_tree.hpp>
 #include <uhd/types/direction.hpp>
@@ -14,8 +15,8 @@
 #include <uhdlib/usrp/common/ad9361_ctrl.hpp>
 #include <stdint.h>
 #include <boost/format.hpp>
+#include <boost/shared_ptr.hpp>
 #include <functional>
-#include <memory>
 
 namespace uhd { namespace usrp {
 
@@ -28,7 +29,7 @@ namespace uhd { namespace usrp {
 class ad936x_manager
 {
 public:
-    typedef std::shared_ptr<ad936x_manager> sptr;
+    typedef boost::shared_ptr<ad936x_manager> sptr;
 
     static const double DEFAULT_GAIN;
     static const double DEFAULT_BANDWIDTH;
@@ -109,3 +110,5 @@ public:
 }; /* class ad936x_manager */
 
 }} /* namespace uhd::usrp */
+
+#endif /* INCLUDED_AD9361_MANAGER_HPP */

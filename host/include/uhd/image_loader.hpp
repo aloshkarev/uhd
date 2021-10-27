@@ -6,12 +6,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_IMAGE_LOADER_HPP
+#define INCLUDED_UHD_IMAGE_LOADER_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/device_addr.hpp>
 #include <uhd/utils/noncopyable.hpp>
-#include <functional>
+#include <boost/function.hpp>
 #include <string>
 
 namespace uhd {
@@ -31,8 +32,6 @@ public:
         std::string id;
         std::vector<uint8_t> component;
         uhd::dict<std::string, std::string> metadata;
-        bool delay_reload = false;
-        bool just_reload  = false;
     } image_loader_args_t;
 
     //! Signature of an image loading function
@@ -51,7 +50,7 @@ public:
      *    device and expect the default image(s) to be loaded, but the specific
      *    model of the device cannot be determined beyond a category.
      */
-    typedef std::function<bool(const image_loader_args_t&)> loader_fcn_t;
+    typedef boost::function<bool(const image_loader_args_t&)> loader_fcn_t;
 
     //! Register an image loader
     /*!
@@ -80,3 +79,5 @@ public:
 };
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_IMAGE_LOADER_HPP */

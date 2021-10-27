@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_CHDR_HPP
+#define INCLUDED_UHD_TRANSPORT_CHDR_HPP
 
 #include <uhd/transport/vrt_if_packet.hpp>
 
@@ -87,3 +88,5 @@ UHD_API void if_hdr_unpack_le(
 } // namespace chdr
 
 }}} // namespace uhd::transport::vrt
+
+#endif /* INCLUDED_UHD_TRANSPORT_CHDR_HPP */

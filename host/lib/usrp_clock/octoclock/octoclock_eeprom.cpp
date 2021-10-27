@@ -15,6 +15,7 @@
 #include <uhd/usrp_clock/octoclock_eeprom.hpp>
 #include <uhd/utils/byteswap.hpp>
 #include <boost/asio.hpp>
+#include <boost/assign/list_of.hpp>
 
 typedef boost::asio::ip::address_v4 ip_v4;
 

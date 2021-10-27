@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_SAFE_MAIN_HPP
+#define INCLUDED_UHD_UTILS_SAFE_MAIN_HPP
 
 #include <uhd/config.hpp>
 #include <iostream>
@@ -32,3 +33,5 @@
         return ~0;                                                \
     }                                                             \
     int _main(_argc, _argv)
+
+#endif /* INCLUDED_UHD_UTILS_SAFE_MAIN_HPP */

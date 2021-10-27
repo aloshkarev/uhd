@@ -5,19 +5,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TYPES_WB_IFACE_HPP
+#define INCLUDED_UHD_TYPES_WB_IFACE_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/time_spec.hpp>
 #include <stdint.h>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace uhd {
 
 class UHD_API wb_iface
 {
 public:
-    typedef std::shared_ptr<wb_iface> sptr;
+    typedef boost::shared_ptr<wb_iface> sptr;
     typedef uint32_t wb_addr_type;
 
     virtual ~wb_iface(void);
@@ -68,7 +69,7 @@ public:
 class UHD_API timed_wb_iface : public wb_iface
 {
 public:
-    typedef std::shared_ptr<timed_wb_iface> sptr;
+    typedef boost::shared_ptr<timed_wb_iface> sptr;
 
     /*!
      * Get the command time.
@@ -84,3 +85,5 @@ public:
 };
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_TYPES_WB_IFACE_HPP */

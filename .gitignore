@@ -1,6 +1,4 @@
-.idea
 debian
 *~
 *swp
 *.pyc
-.DS_Store

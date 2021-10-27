@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_USRP_DBOARD_ID_HPP
+#define INCLUDED_UHD_USRP_DBOARD_ID_HPP
 
 #include <uhd/config.hpp>
 #include <stdint.h>
@@ -82,3 +83,5 @@ private:
 UHD_API bool operator==(const dboard_id_t& lhs, const dboard_id_t& rhs);
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_UHD_USRP_DBOARD_ID_HPP */

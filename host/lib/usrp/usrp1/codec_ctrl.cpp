@@ -13,14 +13,13 @@
 #include <uhd/utils/byteswap.hpp>
 #include <uhd/utils/log.hpp>
 #include <uhd/utils/safe_call.hpp>
-#include <uhdlib/utils/narrow.hpp>
-#include <cstdint>
+#include <stdint.h>
 #include <boost/assign/list_of.hpp>
 #include <boost/format.hpp>
+#include <boost/math/special_functions/round.hpp>
 #include <boost/math/special_functions/sign.hpp>
-#include <cmath>
+#include <boost/tuple/tuple.hpp>
 #include <iomanip>
-#include <tuple>
 
 using namespace uhd;
 
@@ -40,24 +39,24 @@ class usrp1_codec_ctrl_impl : public usrp1_codec_ctrl
 public:
     // structors
     usrp1_codec_ctrl_impl(spi_iface::sptr iface, int spi_slave);
-    ~usrp1_codec_ctrl_impl(void) override;
+    ~usrp1_codec_ctrl_impl(void);
 
     // aux adc and dac control
-    double read_aux_adc(aux_adc_t which) override;
-    void write_aux_dac(aux_dac_t which, double volts) override;
+    double read_aux_adc(aux_adc_t which);
+    void write_aux_dac(aux_dac_t which, double volts);
 
     // duc control
-    void set_duc_freq(double freq, double) override;
-    void enable_tx_digital(bool enb) override;
+    void set_duc_freq(double freq, double);
+    void enable_tx_digital(bool enb);
 
     // pga gain control
-    void set_tx_pga_gain(double) override;
-    double get_tx_pga_gain(void) override;
-    void set_rx_pga_gain(double, char) override;
-    double get_rx_pga_gain(char) override;
+    void set_tx_pga_gain(double);
+    double get_tx_pga_gain(void);
+    void set_rx_pga_gain(double, char);
+    double get_rx_pga_gain(char);
 
     // rx adc buffer control
-    void bypass_adc_buffers(bool bypass) override;
+    void bypass_adc_buffers(bool bypass);
 
 private:
     spi_iface::sptr _iface;
@@ -258,8 +257,7 @@ void usrp1_codec_ctrl_impl::write_aux_dac(aux_dac_t which, double volts)
 {
     // special case for aux dac d (aka sigma delta word)
     if (which == AUX_DAC_D) {
-        uint16_t dac_word = uhd::clip(
-            uhd::narrow_cast<int>(std::lround(volts * 0xfff / 3.3)), 0, 0xfff);
+        uint16_t dac_word = uhd::clip(boost::math::iround(volts * 0xfff / 3.3), 0, 0xfff);
         _ad9862_regs.sig_delt_11_4 = uint8_t(dac_word >> 4);
         _ad9862_regs.sig_delt_3_0  = uint8_t(dac_word & 0xf);
         this->send_reg(42);
@@ -268,11 +266,10 @@ void usrp1_codec_ctrl_impl::write_aux_dac(aux_dac_t which, double volts)
     }
 
     // calculate the dac word for aux dac a, b, c
-    uint8_t dac_word =
-        uhd::clip(uhd::narrow_cast<int>(std::lround(volts * 0xff / 3.3)), 0, 0xff);
+    uint8_t dac_word = uhd::clip(boost::math::iround(volts * 0xff / 3.3), 0, 0xff);
 
     // setup a lookup table for the aux dac params (reg ref, reg addr)
-    typedef std::tuple<uint8_t*, uint8_t> dac_params_t;
+    typedef boost::tuple<uint8_t*, uint8_t> dac_params_t;
     uhd::dict<aux_dac_t, dac_params_t> aux_dac_to_params =
         boost::assign::map_list_of(AUX_DAC_A, dac_params_t(&_ad9862_regs.aux_dac_a, 36))(
             AUX_DAC_B, dac_params_t(&_ad9862_regs.aux_dac_b, 37))(
@@ -281,8 +278,8 @@ void usrp1_codec_ctrl_impl::write_aux_dac(aux_dac_t which, double volts)
     // set the aux dac register
     UHD_ASSERT_THROW(aux_dac_to_params.has_key(which));
     uint8_t *reg_ref, reg_addr;
-    std::tie(reg_ref, reg_addr) = aux_dac_to_params[which];
-    *reg_ref                    = dac_word;
+    boost::tie(reg_ref, reg_addr) = aux_dac_to_params[which];
+    *reg_ref                      = dac_word;
     this->send_reg(reg_addr);
 }
 
@@ -359,7 +356,7 @@ double usrp1_codec_ctrl_impl::fine_tune(double codec_rate, double target_freq)
     static const double scale_factor = std::pow(2.0, 24);
 
     uint32_t freq_word =
-        uint32_t(std::lround(std::abs((target_freq / codec_rate) * scale_factor)));
+        uint32_t(boost::math::round(std::abs((target_freq / codec_rate) * scale_factor)));
 
     double actual_freq = freq_word * codec_rate / scale_factor;
 

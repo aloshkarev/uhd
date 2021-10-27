@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_BYTESWAP_HPP
+#define INCLUDED_UHD_UTILS_BYTESWAP_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/endianness.hpp>
@@ -52,3 +53,5 @@ T htowx(T);
 } // namespace uhd
 
 #include <uhd/utils/byteswap.ipp>
+
+#endif /* INCLUDED_UHD_UTILS_BYTESWAP_HPP */

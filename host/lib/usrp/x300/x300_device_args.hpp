@@ -146,7 +146,7 @@ public:
         return _orig_args;
     }
 
-    inline std::string to_string() const override
+    inline virtual std::string to_string() const
     {
         // We leave out blank_eeprom for safety reasons
         return (!_first_addr.get().empty() ? (_first_addr.to_string() + ", ") : "")
@@ -185,7 +185,7 @@ public:
     }
 
 private:
-    void _parse(const device_addr_t& dev_args) override
+    virtual void _parse(const device_addr_t& dev_args)
     {
         _orig_args = dev_args;
         // Extract parameters from dev_args
@@ -197,11 +197,12 @@ private:
         if (dev_args.has_key(_dboard_clock_rate.key())) {
             _dboard_clock_rate.parse(dev_args[_dboard_clock_rate.key()]);
         } else {
-            // This default clock rate works best for most daughterboards (i.e. DBSRX2,
-            // WBX, SBX, CBX, and TwinRX).
+            // Some daughterboards may require other rates, but this default
+            // works best for all newer daughterboards (i.e. CBX, WBX, SBX,
+            // UBX, and TwinRX).
             if (_master_clock_rate.get() >= MIN_TICK_RATE
                 && _master_clock_rate.get() <= MAX_TICK_RATE) {
-                _dboard_clock_rate.set(_master_clock_rate.get() / 2);
+                _dboard_clock_rate.set(_master_clock_rate.get() / 4);
             } else {
                 throw uhd::value_error("Can't infer daughterboard clock rate. Specify "
                                        "dboard_clk_rate in the device args.");

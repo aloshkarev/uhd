@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
-# Copyright 2018-2020 Ettus Research, a National Instruments Company
+# Copyright 2018 Ettus Research, a National Instruments Company
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
@@ -17,10 +17,12 @@ time:
 $ rx_settling_time.py -a type=x300 -f 1e9 -g 0 --new-gain 30 --plot
 """
 
-import sys
+from __future__ import print_function
 import argparse
 import numpy as np
+from six import iteritems
 import uhd
+
 
 def parse_args():
     """Parse the command line arguments"""
@@ -61,9 +63,6 @@ def parse_args():
         "--new-gain",
         help="Gain after set time")
     parser.add_argument(
-        "--property-bool",
-        help="Set a Boolean property tree node. Use the format path=True or path=False.")
-    parser.add_argument(
         "-r", "--rate", default=1e6, type=float,
         help="Sampling rate (Hz)")
     parser.add_argument(
@@ -75,6 +74,7 @@ def parse_args():
         "--plot", default=False, action="store_true",
         help="Show nice pic")
     return parser.parse_args()
+
 
 
 def get_rx_streamer(usrp, chan):
@@ -109,18 +109,6 @@ def start_rx_stream(streamer, start_time):
     streamer.issue_stream_cmd(stream_cmd)
 
 
-def _cmd_set_property_bool(usrp, key_value):
-    """
-    Execute setting a Boolean property tree node. key_value is a string of the
-    form "/path/to/node=True" (or "False").
-    """
-    path, value = key_value.split("=")
-    value = value.lower()
-    # Convert to bool from string, allowing all sorts of "true" values:
-    value = value in ("1", "yes", "y", "true")
-    usrp.get_tree().access_bool(path).set(value)
-
-
 def load_commands(usrp, chan, cmd_time, **kwargs):
     """
     Load the switching commands.
@@ -129,9 +117,8 @@ def load_commands(usrp, chan, cmd_time, **kwargs):
     kw_cb_map = {
         'freq': lambda freq: usrp.set_rx_freq(uhd.types.TuneRequest(float(freq)), chan),
         'gain': lambda gain: usrp.set_rx_gain(float(gain), chan),
-        'prop_tree_bool': lambda key_value: _cmd_set_property_bool(usrp, key_value),
     }
-    for key, callback in kw_cb_map.items():
+    for key, callback in iteritems(kw_cb_map):
         if kwargs.get(key) is not None:
             callback(kwargs[key])
     usrp.clear_command_time()
@@ -235,7 +222,6 @@ def main():
         cmd_time=time_zero+args.setup_delay+args.set_delay,
         freq=args.new_freq,
         gain=args.new_gain,
-        prop_tree_bool=args.property_bool,
     )
     print("Starting receive...")
     samps = recv_samples(rx_streamer, total_num_samps, skip_samps)
@@ -259,4 +245,5 @@ def main():
     return True
 
 if __name__ == "__main__":
-    sys.exit(not main())
+    exit(not main())
+

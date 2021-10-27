@@ -42,10 +42,7 @@ function(UHD_ADD_TEST test_name)
     #add_test(${ARGV})
     #set_tests_properties(${test_name} PROPERTIES ENVIRONMENT "${environs}")
 
-    if(ENABLE_QEMU_UNITTESTS)
-        # use QEMU emulator for executing test
-        add_test(${test_name} ${QEMU_EXECUTABLE} -L ${QEMU_SYSROOT} ${test_name})
-    elseif(UNIX)
+    if(UNIX)
         set(LD_PATH_VAR "LD_LIBRARY_PATH")
         if(APPLE)
             set(LD_PATH_VAR "DYLD_LIBRARY_PATH")
@@ -81,7 +78,7 @@ function(UHD_ADD_TEST test_name)
 
         add_test(${test_name} ${SHELL} ${sh_file})
 
-    endif(ENABLE_QEMU_UNITTESTS)
+    endif(UNIX)
 
     if(WIN32)
         list(APPEND libpath ${DLL_PATHS} "%PATH%")
@@ -107,38 +104,3 @@ function(UHD_ADD_TEST test_name)
     endif(WIN32)
 
 endfunction(UHD_ADD_TEST)
-
-########################################################################
-# Add a Python unit test
-########################################################################
-function(UHD_ADD_PYTEST test_name)
-    if(ENABLE_QEMU_UNITTESTS)
-        # use QEMU emulator for executing test
-        add_test(NAME ${test_name}
-            COMMAND ${QEMU_EXECUTABLE} -L ${QEMU_SYSROOT}
-                                       ${QEMU_PYTHON_EXECUTABLE}
-                                       -m unittest discover
-                                       -s ${CMAKE_CURRENT_SOURCE_DIR}
-                                       -p "${test_name}.*"
-            WORKING_DIRECTORY "${UHD_BINARY_DIR}/python"
-        )
-    else()
-        add_test(NAME ${test_name}
-            COMMAND ${RUNTIME_PYTHON_EXECUTABLE} -m unittest discover
-                                                 -s ${CMAKE_CURRENT_SOURCE_DIR}
-                                                 -p "${test_name}.*"
-            WORKING_DIRECTORY "${UHD_BINARY_DIR}/python"
-        )
-    endif(ENABLE_QEMU_UNITTESTS)
-    # Include ${UHD_BINARY_DIR}/utils/ for testing the python utils
-    if(APPLE)
-        set_tests_properties(${test_name} PROPERTIES
-            ENVIRONMENT
-            "DYLD_LIBRARY_PATH=${UHD_BINARY_DIR}/lib/;PYTHONPATH=${UHD_BINARY_DIR}/python:${UHD_SOURCE_DIR}/tests/common:${UHD_BINARY_DIR}/utils/")
-    else()
-        set_tests_properties(${test_name} PROPERTIES
-            ENVIRONMENT
-            "LD_LIBRARY_PATH=${UHD_BINARY_DIR}/lib/;PYTHONPATH=${UHD_BINARY_DIR}/python:${UHD_SOURCE_DIR}/tests/common:${UHD_BINARY_DIR}/utils/"
-            )
-    endif()
-endfunction(UHD_ADD_PYTEST)

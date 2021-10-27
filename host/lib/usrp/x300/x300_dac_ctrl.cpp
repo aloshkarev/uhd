@@ -48,7 +48,7 @@ public:
         reset();
     }
 
-    ~x300_dac_ctrl_impl(void) override
+    ~x300_dac_ctrl_impl(void)
     {
         UHD_SAFE_CALL(
             // Power down all DAC subsystems
@@ -59,7 +59,7 @@ public:
         )
     }
 
-    void reset() override
+    void reset()
     {
         // ADI recommendations:
         //- soft reset the chip before configuration
@@ -75,7 +75,7 @@ public:
         _sleep_mode(false);
     }
 
-    void sync() override
+    void sync()
     {
         try {
             // Just return if PLL is locked and backend is synchronized
@@ -102,7 +102,7 @@ public:
         throw uhd::runtime_error(err_str);
     }
 
-    void verify_sync() override
+    void verify_sync()
     {
         _check_pll();
         _check_dac_sync();

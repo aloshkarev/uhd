@@ -5,16 +5,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#define _USE_MATH_DEFINES
 #include "ad9361_device.h"
 #include "ad9361_client.h"
 #include "ad9361_filter_taps.h"
 #include "ad9361_gain_tables.h"
 #include "ad9361_synth_lut.h"
+#define _USE_MATH_DEFINES
 #include <uhd/exception.hpp>
 #include <uhd/utils/log.hpp>
 #include <stdint.h>
 #include <boost/format.hpp>
+#include <boost/math/special_functions.hpp>
 #include <boost/scoped_array.hpp>
 #include <chrono>
 #include <cmath>
@@ -1236,17 +1237,13 @@ double ad9361_device_t::_tune_bbvco(const double rate)
     int nint = static_cast<int>(vcorate / fref);
     UHD_LOG_TRACE("AD936X", "[ad9361_device_t::_tune_bbvco] (nint)=" << (vcorate / fref));
     int nfrac = static_cast<int>(
-        std::lround(((vcorate / fref) - (double)nint) * (double)modulus));
+        boost::math::round(((vcorate / fref) - (double)nint) * (double)modulus));
     UHD_LOG_TRACE("AD936X",
         "[ad9361_device_t::_tune_bbvco] (nfrac)=" << ((vcorate / fref) - (double)nint)
                                                          * (double)modulus);
     UHD_LOG_TRACE("AD936X",
         boost::format("[ad9361_device_t::_tune_bbvco] nint=%d nfrac=%d") % nint % nfrac);
-    const double actual_vcorate =
-        fref * ((double)nint + ((double)nfrac / (double)modulus));
-    UHD_LOG_TRACE("AD936X",
-        boost::format("[ad9361_device_t::_tune_bbvco] actual vcorate=%.10f")
-            % actual_vcorate);
+    double actual_vcorate = fref * ((double)nint + ((double)nfrac / (double)modulus));
 
     /* Scale CP current according to VCO rate */
     const double icp_baseline  = 150e-6;
@@ -1511,30 +1508,14 @@ double ad9361_device_t::_setup_rates(const double rate)
     const double adcclk = _tune_bbvco(rate * divfactor);
     double dacclk       = adcclk;
 
-    // We keep the DAC clock <= 336 MHz, either the ADC clock or 1/2 the ADC
-    // clock.
-    // Note that current recommendations from ADI are 640 MHz for the ADC and
-    // 320 MHz for the DAC. We are thus overclocking the AD9361, since we are
-    // using these no longer valid recommendations, but they seem to work and we
-    // consider the risk of changing these higher than the benefit. We will add
-    // a log statement, though, so we can track back suboptimal RF performance
-    // to overclocked settings.
+    /* The DAC clock must be <= 336e6, and is either the ADC clock or 1/2 the
+     * ADC clock.*/
     if (adcclk > 336e6) {
         /* Make the DAC clock = ADC/2 */
         _regs.bbpll = _regs.bbpll | 0x08;
         dacclk      = adcclk / 2.0;
     } else {
         _regs.bbpll = _regs.bbpll & 0xF7;
-    }
-    if (dacclk > 320e6) {
-        UHD_LOG_DEBUG("AD936X",
-            "[ad9361_device_t::_setup_rates] DAC rate is overclocked! dacclk="
-                << (dacclk / 1e6) << " MHz.");
-    }
-    if (dacclk > 640e6) {
-        UHD_LOG_DEBUG("AD936X",
-            "[ad9361_device_t::_setup_rates] ADC rate is overclocked! adcclk="
-                << (adcclk / 1e6) << " MHz.");
     }
 
     /* Set the dividers / interpolators in AD9361. */
@@ -1837,10 +1818,6 @@ void ad9361_device_t::initialize()
 
     /* Set TXers & RXers on (only works in FDD mode) */
     _io_iface->poke8(0x014, 0x21);
-
-    /* We won't be using immediate-Tx-attenuation, so we de-assert "Mask Clr
-     * Atten Update". */
-    _io_iface->poke8(0x077, 0x00);
 }
 
 void ad9361_device_t::set_io_iface(ad9361_io::sptr io_iface)
@@ -2227,6 +2204,11 @@ double ad9361_device_t::set_gain(direction_t direction, chain_t chain, const dou
 
         return gain_index;
     } else {
+        /* Setting the below bits causes a change in the TX attenuation word
+         * to immediately take effect. */
+        _io_iface->poke8(0x077, 0x40);
+        _io_iface->poke8(0x07c, 0x40);
+
         /* Each gain step is -0.25dB. Calculate the attenuation necessary
          * for the requested gain, convert it into gain steps, then write
          * the attenuation word. Max gain (so zero attenuation) is 89.75.
@@ -2234,8 +2216,8 @@ double ad9361_device_t::set_gain(direction_t direction, chain_t chain, const dou
          * "value" is out of bounds, so range checking must be performed
          * outside this function.
          */
-        const double atten      = AD9361_MAX_GAIN - value;
-        const uint32_t attenreg = uint32_t(atten * 4);
+        double atten      = AD9361_MAX_GAIN - value;
+        uint32_t attenreg = uint32_t(atten * 4);
         if (chain == CHAIN_1) {
             _tx1_gain = value;
             _io_iface->poke8(0x073, attenreg & 0xFF);
@@ -2245,13 +2227,6 @@ double ad9361_device_t::set_gain(direction_t direction, chain_t chain, const dou
             _io_iface->poke8(0x075, attenreg & 0xFF);
             _io_iface->poke8(0x076, (attenreg >> 8) & 0x01);
         }
-
-        /* After we've set both registers for the new gain, we apply it (assert
-         * "Immediately Update TPC Atten"). This avoids the attenuation from
-         * intermediately becoming very small (i.e., high output power) during
-         * the set-gain cycle.
-         */
-        _io_iface->poke8(0x07c, 0x40);
         return AD9361_MAX_GAIN - ((double)(attenreg) / 4);
     }
 }
@@ -2808,10 +2783,10 @@ filter_info_base::sptr ad9361_device_t::_get_filter_hb_2(direction_t direction)
         taps_array, taps_array + sizeof(taps_array) / sizeof(int16_t));
 
     digital_filter_base<int16_t>::sptr hb_3 =
-        std::dynamic_pointer_cast<digital_filter_base<int16_t>>(
+        boost::dynamic_pointer_cast<digital_filter_base<int16_t>>(
             _get_filter_hb_3(direction));
     digital_filter_base<int16_t>::sptr dec_int_3 =
-        std::dynamic_pointer_cast<digital_filter_base<int16_t>>(
+        boost::dynamic_pointer_cast<digital_filter_base<int16_t>>(
             _get_filter_dec_int_3(direction));
 
     if (direction == RX) {
@@ -2874,7 +2849,7 @@ filter_info_base::sptr ad9361_device_t::_get_filter_hb_1(direction_t direction)
         -53, 0, 313, 0, -1155, 0, 4989, 8192, 4989, 0, -1155, 0, 313, 0, -53};
 
     digital_filter_base<int16_t>::sptr hb_2 =
-        std::dynamic_pointer_cast<digital_filter_base<int16_t>>(
+        boost::dynamic_pointer_cast<digital_filter_base<int16_t>>(
             _get_filter_hb_2(direction));
 
     if (direction == RX) {
@@ -2920,7 +2895,7 @@ filter_info_base::sptr ad9361_device_t::_get_filter_fir(
     uint8_t enable      = 1;
 
     digital_filter_base<int16_t>::sptr hb_1 =
-        std::dynamic_pointer_cast<digital_filter_base<int16_t>>(
+        boost::dynamic_pointer_cast<digital_filter_base<int16_t>>(
             _get_filter_hb_1(direction));
 
     if (direction == RX) {
@@ -2963,7 +2938,7 @@ void ad9361_device_t::_set_filter_fir(
     direction_t direction, chain_t channel, filter_info_base::sptr filter)
 {
     digital_filter_fir<int16_t>::sptr fir =
-        std::dynamic_pointer_cast<digital_filter_fir<int16_t>>(filter);
+        boost::dynamic_pointer_cast<digital_filter_fir<int16_t>>(filter);
     // only write taps. Ignore everything else for now
     _set_fir_taps(direction, channel, fir->get_taps());
 }
@@ -2976,7 +2951,7 @@ void ad9361_device_t::_set_filter_fir(
 void ad9361_device_t::_set_filter_lp_bb(
     direction_t direction, filter_info_base::sptr filter)
 {
-    analog_filter_lp::sptr lpf = std::dynamic_pointer_cast<analog_filter_lp>(filter);
+    analog_filter_lp::sptr lpf = boost::dynamic_pointer_cast<analog_filter_lp>(filter);
     double bw                  = lpf->get_cutoff();
     if (direction == RX) {
         // remember: this function takes rf bw as its input and calibrated to 1.4 x the
@@ -2994,7 +2969,7 @@ void ad9361_device_t::_set_filter_lp_bb(
 void ad9361_device_t::_set_filter_lp_tia_sec(
     direction_t direction, filter_info_base::sptr filter)
 {
-    analog_filter_lp::sptr lpf = std::dynamic_pointer_cast<analog_filter_lp>(filter);
+    analog_filter_lp::sptr lpf = boost::dynamic_pointer_cast<analog_filter_lp>(filter);
     double bw                  = lpf->get_cutoff();
     if (direction == RX) {
         // remember: this function takes rf bw as its input and calibrated to 2.5 x the

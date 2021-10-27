@@ -18,12 +18,9 @@ elseif(ENABLE_E320 OR ENABLE_E300)
     add_subdirectory(catalina)
 endif(ENABLE_MYKONOS)
 
-if(ENABLE_X400)
-  add_subdirectory(rfdc)
-endif(ENABLE_X400)
-
 USRP_PERIPHS_ADD_OBJECT(periphs
     exception.cpp
+    xbar_iface.cpp
     ${UHD_SOURCE_DIR}/lib/exception.cpp
 )
 

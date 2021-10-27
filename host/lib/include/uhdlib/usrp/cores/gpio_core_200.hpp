@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_USRP_GPIO_CORE_200_HPP
+#define INCLUDED_LIBUHD_USRP_GPIO_CORE_200_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/wb_iface.hpp>
@@ -13,13 +14,13 @@
 #include <uhd/usrp/gpio_defs.hpp>
 #include <uhd/utils/noncopyable.hpp>
 #include <stdint.h>
+#include <boost/shared_ptr.hpp>
 #include <map>
-#include <memory>
 
 class gpio_core_200 : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<gpio_core_200> sptr;
+    typedef boost::shared_ptr<gpio_core_200> sptr;
 
     typedef uhd::usrp::dboard_iface::unit_t unit_t;
     typedef uhd::usrp::dboard_iface::atr_reg_t atr_reg_t;
@@ -60,7 +61,7 @@ public:
 class gpio_core_200_32wo : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<gpio_core_200_32wo> sptr;
+    typedef boost::shared_ptr<gpio_core_200_32wo> sptr;
 
     typedef uhd::usrp::dboard_iface::atr_reg_t atr_reg_t;
 
@@ -74,3 +75,5 @@ public:
 
     virtual void set_all_regs(const uint32_t value) = 0;
 };
+
+#endif /* INCLUDED_LIBUHD_USRP_GPIO_CORE_200_HPP */

@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_USB_ZERO_COPY_HPP
+#define INCLUDED_UHD_TRANSPORT_USB_ZERO_COPY_HPP
 
 #include <uhd/transport/usb_device_handle.hpp>
 #include <uhd/transport/zero_copy.hpp>
@@ -26,9 +27,9 @@ namespace uhd { namespace transport {
 class UHD_API usb_zero_copy : public virtual zero_copy_if
 {
 public:
-    typedef std::shared_ptr<usb_zero_copy> sptr;
+    typedef boost::shared_ptr<usb_zero_copy> sptr;
 
-    ~usb_zero_copy(void) override;
+    virtual ~usb_zero_copy(void);
 
     /*!
      * Make a new zero copy USB transport:
@@ -54,3 +55,5 @@ public:
 };
 
 }} // namespace uhd::transport
+
+#endif /* INCLUDED_UHD_TRANSPORT_USB_ZERO_COPY_HPP */

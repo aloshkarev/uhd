@@ -124,7 +124,7 @@ class sbx_xcvr : public xcvr_dboard_base
 {
 public:
     sbx_xcvr(ctor_args_t args);
-    ~sbx_xcvr(void) override;
+    virtual ~sbx_xcvr(void);
 
 protected:
     uhd::dict<std::string, double> _tx_gains, _rx_gains;
@@ -182,9 +182,9 @@ protected:
     {
     public:
         sbx_version3(sbx_xcvr* _self_sbx_xcvr);
-        ~sbx_version3(void) override;
+        virtual ~sbx_version3(void);
 
-        double set_lo_freq(dboard_iface::unit_t unit, double target_freq) override;
+        double set_lo_freq(dboard_iface::unit_t unit, double target_freq);
 
         /*! This is the registered instance of the wrapper class, sbx_base. */
         sbx_xcvr* self_base;
@@ -204,9 +204,9 @@ protected:
     {
     public:
         sbx_version4(sbx_xcvr* _self_sbx_xcvr);
-        ~sbx_version4(void) override;
+        virtual ~sbx_version4(void);
 
-        double set_lo_freq(dboard_iface::unit_t unit, double target_freq) override;
+        double set_lo_freq(dboard_iface::unit_t unit, double target_freq);
 
         /*! This is the registered instance of the wrapper class, sbx_base. */
         sbx_xcvr* self_base;
@@ -231,9 +231,9 @@ protected:
     {
     public:
         cbx(sbx_xcvr* _self_sbx_xcvr);
-        ~cbx(void) override;
+        virtual ~cbx(void);
 
-        double set_lo_freq(dboard_iface::unit_t unit, double target_freq) override;
+        double set_lo_freq(dboard_iface::unit_t unit, double target_freq);
 
         /*! This is the registered instance of the wrapper class, sbx_base. */
         sbx_xcvr* self_base;
@@ -270,6 +270,6 @@ protected:
      * sbx_version* subclass, and invoke any relevant functions through that
      * object.  This pointer is set to the proper object at construction time.
      */
-    typedef std::shared_ptr<sbx_versionx> sbx_versionx_sptr;
+    typedef boost::shared_ptr<sbx_versionx> sbx_versionx_sptr;
     sbx_versionx_sptr db_actual;
 };

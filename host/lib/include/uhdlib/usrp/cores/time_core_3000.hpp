@@ -5,18 +5,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_USRP_TIME_CORE_3000_HPP
+#define INCLUDED_LIBUHD_USRP_TIME_CORE_3000_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/time_spec.hpp>
 #include <uhd/types/wb_iface.hpp>
 #include <uhd/utils/noncopyable.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 class time_core_3000 : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<time_core_3000> sptr;
+    typedef boost::shared_ptr<time_core_3000> sptr;
 
     struct readback_bases_type
     {
@@ -45,3 +46,5 @@ public:
 
     virtual void set_time_next_pps(const uhd::time_spec_t& time) = 0;
 };
+
+#endif /* INCLUDED_LIBUHD_USRP_TIME_CORE_3000_HPP */

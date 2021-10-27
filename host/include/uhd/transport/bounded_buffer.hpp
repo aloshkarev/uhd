@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_BOUNDED_BUFFER_HPP
+#define INCLUDED_UHD_TRANSPORT_BOUNDED_BUFFER_HPP
 
 #include <uhd/transport/bounded_buffer.ipp> //detail
 
@@ -114,3 +115,5 @@ private:
 };
 
 }} // namespace uhd::transport
+
+#endif /* INCLUDED_UHD_TRANSPORT_BOUNDED_BUFFER_HPP */

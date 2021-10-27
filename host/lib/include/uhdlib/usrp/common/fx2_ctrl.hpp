@@ -5,12 +5,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_USRP_COMMON_FX2_CTRL_HPP
+#define INCLUDED_LIBUHD_USRP_COMMON_FX2_CTRL_HPP
 
 #include <uhd/transport/usb_control.hpp>
 #include <uhd/types/serial.hpp> //i2c iface
 #include <uhd/utils/noncopyable.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 #define FL_BEGIN 0
 #define FL_END 2
@@ -34,7 +35,7 @@ namespace uhd { namespace usrp {
 class fx2_ctrl : uhd::noncopyable, public uhd::i2c_iface
 {
 public:
-    typedef std::shared_ptr<fx2_ctrl> sptr;
+    typedef boost::shared_ptr<fx2_ctrl> sptr;
 
     /*!
      * Make a usrp control object from a control transport
@@ -129,3 +130,5 @@ public:
 };
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_LIBUHD_USRP_COMMON_FX2_CTRL_HPP */

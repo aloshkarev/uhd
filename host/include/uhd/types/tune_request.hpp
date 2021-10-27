@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TYPES_TUNE_REQUEST_HPP
+#define INCLUDED_UHD_TYPES_TUNE_REQUEST_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/device_addr.hpp>
@@ -15,7 +16,7 @@ namespace uhd {
 /*!
  * A tune request instructs the implementation how to tune the RF chain.
  * The policies can be used to select automatic tuning or
- * fine control over the daughterboard IF and DSP tuning.
+ * fined control over the daughterboard IF and DSP tuning.
  * Not all combinations of policies are applicable.
  * Convenience constructors are supplied for most use cases.
  *
@@ -104,3 +105,5 @@ struct UHD_API tune_request_t
 };
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_TYPES_TUNE_REQUEST_HPP */

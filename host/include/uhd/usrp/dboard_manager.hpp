@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_USRP_DBOARD_MANAGER_HPP
+#define INCLUDED_UHD_USRP_DBOARD_MANAGER_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/property_tree.hpp>
@@ -12,7 +13,7 @@
 #include <uhd/usrp/dboard_eeprom.hpp>
 #include <uhd/usrp/dboard_id.hpp>
 #include <uhd/utils/noncopyable.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 #include <string>
 #include <vector>
 
@@ -26,7 +27,7 @@ namespace uhd { namespace usrp {
 class UHD_API dboard_manager : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<dboard_manager> sptr;
+    typedef boost::shared_ptr<dboard_manager> sptr;
 
     // dboard constructor (each dboard should have a ::make with this signature)
     typedef dboard_base::sptr (*dboard_ctor_t)(dboard_base::ctor_args_t);
@@ -158,3 +159,5 @@ public:
 };
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_UHD_USRP_DBOARD_MANAGER_HPP */

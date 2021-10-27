@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TYPES_RANGES_H
+#define INCLUDED_UHD_TYPES_RANGES_H
 
 #include <uhd/config.h>
 #include <uhd/error.h>
@@ -139,3 +140,5 @@ UHD_API void uhd_range_cpp_to_c(
     uhd_range_t *range_c
 );
 #endif
+
+#endif /* INCLUDED_UHD_TYPES_RANGES_H */

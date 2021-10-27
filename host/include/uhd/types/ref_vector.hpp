@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TYPES_REF_VECTOR_HPP
+#define INCLUDED_UHD_TYPES_REF_VECTOR_HPP
 
 #include <uhd/config.hpp>
 #include <cstddef>
@@ -75,3 +76,5 @@ private:
 };
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_TYPES_REF_VECTOR_HPP */

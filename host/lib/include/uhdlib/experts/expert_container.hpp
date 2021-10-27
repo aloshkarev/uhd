@@ -5,13 +5,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_EXPERTS_EXPERT_CONTAINER_HPP
+#define INCLUDED_UHD_EXPERTS_EXPERT_CONTAINER_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/utils/noncopyable.hpp>
 #include <uhdlib/experts/expert_nodes.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-#include <memory>
 
 namespace uhd { namespace experts {
 
@@ -25,9 +26,9 @@ enum auto_resolve_mode_t {
 class UHD_API expert_container : private uhd::noncopyable, public node_retriever_t
 {
 public: // Methods
-    typedef std::shared_ptr<expert_container> sptr;
+    typedef boost::shared_ptr<expert_container> sptr;
 
-    ~expert_container() override{};
+    virtual ~expert_container(){};
 
     /*!
      * Return the name of this container
@@ -121,8 +122,8 @@ private:
      * \param name Name of the node to find
      *
      */
-    const dag_vertex_t& lookup(const std::string& name) const override = 0;
-    dag_vertex_t& retrieve(const std::string& name) const override     = 0;
+    virtual const dag_vertex_t& lookup(const std::string& name) const = 0;
+    virtual dag_vertex_t& retrieve(const std::string& name) const     = 0;
 
     /*!
      * expert_factory is a friend of expert_container and
@@ -191,3 +192,5 @@ private:
 };
 
 }} // namespace uhd::experts
+
+#endif /* INCLUDED_UHD_EXPERTS_EXPERT_CONTAINER_HPP */

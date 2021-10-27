@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TYPES_SENSORS_HPP
+#define INCLUDED_UHD_TYPES_SENSORS_HPP
 
 #include <uhd/config.hpp>
 #include <map>
@@ -133,3 +134,5 @@ struct UHD_API sensor_value_t
 };
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_TYPES_SENSORS_HPP */

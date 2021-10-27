@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_BUILD_INFO_HPP
+#define INCLUDED_UHD_BUILD_INFO_HPP
 
 #include <uhd/config.hpp>
 #include <string>
@@ -38,3 +39,5 @@ UHD_API const std::string install_prefix();
 //! Return the version of libusb this build was built with.
 UHD_API const std::string libusb_version();
 }} // namespace uhd::build_info
+
+#endif /* INCLUDED_UHD_BUILD_INFO_HPP */

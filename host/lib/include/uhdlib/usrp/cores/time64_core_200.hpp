@@ -5,21 +5,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_USRP_TIME64_CORE_200_HPP
+#define INCLUDED_LIBUHD_USRP_TIME64_CORE_200_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/time_spec.hpp>
 #include <uhd/types/wb_iface.hpp>
 #include <uhd/utils/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
-#include <memory>
 #include <string>
 #include <vector>
 
 class time64_core_200 : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<time64_core_200> sptr;
+    typedef boost::shared_ptr<time64_core_200> sptr;
 
     struct readback_bases_type
     {
@@ -52,3 +53,5 @@ public:
 
     virtual std::vector<std::string> get_time_sources(void) = 0;
 };
+
+#endif /* INCLUDED_LIBUHD_USRP_TIME64_CORE_200_HPP */

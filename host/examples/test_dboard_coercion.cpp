@@ -22,6 +22,7 @@ static const double SAMP_RATE = 1e6;
 
 namespace po = boost::program_options;
 
+typedef std::pair<double, double> double_pair; // BOOST_FOREACH doesn't like commas
 typedef std::vector<std::pair<double, double>> pair_vector;
 
 /************************************************************************
@@ -44,7 +45,7 @@ std::string return_usrp_config_string(
     std::string rx_serial, rx_subdev_name, rx_subdev_spec;
 
     mboard_id = tx_info.get("mboard_id");
-    if (tx_info.get("mboard_serial").empty())
+    if (tx_info.get("mboard_serial") == "")
         mboard_serial = "no serial";
     else
         mboard_serial = tx_info.get("mboard_serial");
@@ -53,7 +54,7 @@ std::string return_usrp_config_string(
         str(boost::format("Motherboard: %s (%s)\n") % mboard_id % mboard_serial);
 
     if (test_tx) {
-        if (tx_info.get("tx_serial").empty())
+        if (tx_info.get("tx_serial") == "")
             tx_serial = "no serial";
         else
             tx_serial = tx_info.get("tx_serial");
@@ -68,7 +69,7 @@ std::string return_usrp_config_string(
     if (test_tx and test_rx)
         info_string += "\n";
     if (test_rx) {
-        if (rx_info.get("rx_serial").empty())
+        if (rx_info.get("rx_serial") == "")
             rx_serial = "no serial";
         else
             rx_serial = rx_info.get("rx_serial");
@@ -339,7 +340,7 @@ std::string coercion_test(uhd::usrp::multi_usrp::sptr usrp,
         } else {
             results +=
                 "USRP did not successfully set gain under the following circumstances:";
-            for (auto& bad_pair : bad_gain_vals) {
+            for (double_pair bad_pair : bad_gain_vals) {
                 double bad_freq = bad_pair.first;
                 double bad_gain = bad_pair.second;
                 results += str(boost::format("\nFrequency: %s, Gain: %5.2f")

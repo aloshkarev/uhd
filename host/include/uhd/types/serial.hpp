@@ -5,11 +5,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TYPES_SERIAL_HPP
+#define INCLUDED_UHD_TYPES_SERIAL_HPP
 
 #include <uhd/config.hpp>
 #include <stdint.h>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 #include <string>
 #include <vector>
 
@@ -35,7 +36,7 @@ typedef std::vector<uint8_t> byte_vector_t;
 class UHD_API i2c_iface
 {
 public:
-    typedef std::shared_ptr<i2c_iface> sptr;
+    typedef boost::shared_ptr<i2c_iface> sptr;
 
     virtual ~i2c_iface(void);
 
@@ -114,7 +115,7 @@ struct UHD_API spi_config_t
 class UHD_API spi_iface
 {
 public:
-    typedef std::shared_ptr<spi_iface> sptr;
+    typedef boost::shared_ptr<spi_iface> sptr;
 
     virtual ~spi_iface(void);
 
@@ -161,7 +162,7 @@ public:
 class UHD_API uart_iface
 {
 public:
-    typedef std::shared_ptr<uart_iface> sptr;
+    typedef boost::shared_ptr<uart_iface> sptr;
 
     virtual ~uart_iface(void);
 
@@ -180,3 +181,5 @@ public:
 };
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_TYPES_SERIAL_HPP */

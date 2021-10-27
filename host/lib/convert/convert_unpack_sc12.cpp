@@ -17,7 +17,7 @@ struct convert_sc12_item32_1_to_star_1 : public converter
         // NOP
     }
 
-    void set_scalar(const double scalar) override
+    void set_scalar(const double scalar)
     {
         const int unpack_growth = 16;
         _scalar                 = scalar / unpack_growth;
@@ -31,9 +31,8 @@ struct convert_sc12_item32_1_to_star_1 : public converter
      * converter must be aware where it is supposed to start within 3 lines.
      *
      */
-    void operator()(const input_type& inputs,
-        const output_type& outputs,
-        const size_t nsamps) override
+    void operator()(
+        const input_type& inputs, const output_type& outputs, const size_t nsamps)
     {
         /*
          * Looking at the line structure above we can identify 4 cases.

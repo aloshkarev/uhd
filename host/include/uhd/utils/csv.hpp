@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_CSV_HPP
+#define INCLUDED_UHD_UTILS_CSV_HPP
 
 #include <uhd/config.hpp>
 #include <istream>
@@ -20,3 +21,5 @@ typedef std::vector<row_type> rows_type;
 UHD_API rows_type to_rows(std::istream& input);
 
 }} // namespace uhd::csv
+
+#endif /* INCLUDED_UHD_UTILS_CSV_HPP */

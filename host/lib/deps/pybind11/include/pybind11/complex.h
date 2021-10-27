@@ -6,6 +6,8 @@
 */
 
 
+
+
 #pragma once
 
 #include "pybind11.h"
@@ -16,7 +18,7 @@
 #  undef I
 #endif
 
-PYBIND11_NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
+NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
 
 template <typename T> struct format_descriptor<std::complex<T>, detail::enable_if_t<std::is_floating_point<T>::value>> {
     static constexpr const char c = format_descriptor<T>::c;
@@ -31,7 +33,7 @@ template <typename T> constexpr const char format_descriptor<
 
 #endif
 
-PYBIND11_NAMESPACE_BEGIN(detail)
+NAMESPACE_BEGIN(detail)
 
 template <typename T> struct is_fmt_numeric<std::complex<T>, detail::enable_if_t<std::is_floating_point<T>::value>> {
     static constexpr bool value = true;
@@ -60,5 +62,5 @@ public:
 
     PYBIND11_TYPE_CASTER(std::complex<T>, _("complex"));
 };
-PYBIND11_NAMESPACE_END(detail)
-PYBIND11_NAMESPACE_END(PYBIND11_NAMESPACE)
+NAMESPACE_END(detail)
+NAMESPACE_END(PYBIND11_NAMESPACE)

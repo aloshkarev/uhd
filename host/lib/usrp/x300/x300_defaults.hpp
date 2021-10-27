@@ -7,7 +7,7 @@
 #ifndef INCLUDED_X300_DEFAULTS_HPP
 #define INCLUDED_X300_DEFAULTS_HPP
 
-#include <uhd/transport/udp_simple.hpp> //mtu
+#include "../device3/device3_impl.hpp"
 #include <string>
 #include <vector>
 

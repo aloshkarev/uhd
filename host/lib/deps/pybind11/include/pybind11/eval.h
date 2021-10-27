@@ -6,27 +6,13 @@
 */
 
 
+
+
 #pragma once
 
 #include "pybind11.h"
 
-PYBIND11_NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
-PYBIND11_NAMESPACE_BEGIN(detail)
-
-inline void ensure_builtins_in_globals(object &global) {
-    #if PY_VERSION_HEX < 0x03080000
-
-
-
-
-        if (!global.contains("__builtins__"))
-            global["__builtins__"] = module_::import(PYBIND11_BUILTINS_MODULE);
-    #else
-        (void) global;
-    #endif
-}
-
-PYBIND11_NAMESPACE_END(detail)
+NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
 
 enum eval_mode {
 
@@ -43,8 +29,6 @@ template <eval_mode mode = eval_expr>
 object eval(str expr, object global = globals(), object local = object()) {
     if (!local)
         local = global;
-
-    detail::ensure_builtins_in_globals(global);
 
 
     std::string buffer = "# -*- coding: utf-8 -*-\n" + (std::string) expr;
@@ -66,7 +50,7 @@ object eval(str expr, object global = globals(), object local = object()) {
 template <eval_mode mode = eval_expr, size_t N>
 object eval(const char (&s)[N], object global = globals(), object local = object()) {
 
-    auto expr = (s[0] == '\n') ? str(module_::import("textwrap").attr("dedent")(s))
+    auto expr = (s[0] == '\n') ? str(module::import("textwrap").attr("dedent")(s))
                                : str(s);
     return eval<mode>(expr, global, local);
 }
@@ -80,26 +64,10 @@ void exec(const char (&s)[N], object global = globals(), object local = object()
     eval<eval_statements>(s, global, local);
 }
 
-#if defined(PYPY_VERSION) && PY_VERSION_HEX >= 0x03000000
-template <eval_mode mode = eval_statements>
-object eval_file(str, object, object) {
-    pybind11_fail("eval_file not supported in PyPy3. Use eval");
-}
-template <eval_mode mode = eval_statements>
-object eval_file(str, object) {
-    pybind11_fail("eval_file not supported in PyPy3. Use eval");
-}
-template <eval_mode mode = eval_statements>
-object eval_file(str) {
-    pybind11_fail("eval_file not supported in PyPy3. Use eval");
-}
-#else
 template <eval_mode mode = eval_statements>
 object eval_file(str fname, object global = globals(), object local = object()) {
     if (!local)
         local = global;
-
-    detail::ensure_builtins_in_globals(global);
 
     int start;
     switch (mode) {
@@ -143,6 +111,5 @@ object eval_file(str fname, object global = globals(), object local = object()) 
         throw error_already_set();
     return reinterpret_steal<object>(result);
 }
-#endif
 
-PYBIND11_NAMESPACE_END(PYBIND11_NAMESPACE)
+NAMESPACE_END(PYBIND11_NAMESPACE)

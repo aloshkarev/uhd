@@ -12,8 +12,8 @@
 #include <uhd/utils/math.hpp>
 #include <uhdlib/usrp/common/async_packet_handler.hpp>
 #include <uhdlib/usrp/common/validate_subdev_spec.hpp>
-#include <functional>
-#include <memory>
+#include <boost/bind.hpp>
+#include <boost/make_shared.hpp>
 #include <set>
 
 using namespace uhd;
@@ -37,15 +37,15 @@ size_t b200_impl::max_chan_count(const std::string& direction /* = "" */)
     for (radio_perifs_t& perif : _radio_perifs) {
         if ((direction == "RX" or direction.empty())
             and not perif.rx_streamer.expired()) {
-            std::shared_ptr<sph::recv_packet_streamer> rx_streamer =
-                std::dynamic_pointer_cast<sph::recv_packet_streamer>(
+            boost::shared_ptr<sph::recv_packet_streamer> rx_streamer =
+                boost::dynamic_pointer_cast<sph::recv_packet_streamer>(
                     perif.rx_streamer.lock());
             max_count = std::max(max_count, rx_streamer->get_num_channels());
         }
         if ((direction == "TX" or direction.empty())
             and not perif.tx_streamer.expired()) {
-            std::shared_ptr<sph::send_packet_streamer> tx_streamer =
-                std::dynamic_pointer_cast<sph::send_packet_streamer>(
+            boost::shared_ptr<sph::send_packet_streamer> tx_streamer =
+                boost::dynamic_pointer_cast<sph::send_packet_streamer>(
                     perif.tx_streamer.lock());
             max_count = std::max(max_count, tx_streamer->get_num_channels());
         }
@@ -142,16 +142,16 @@ void b200_impl::update_tick_rate(const double new_tick_rate)
     check_tick_rate_with_current_streamers(new_tick_rate);
 
     for (radio_perifs_t& perif : _radio_perifs) {
-        std::shared_ptr<sph::recv_packet_streamer> my_streamer =
-            std::dynamic_pointer_cast<sph::recv_packet_streamer>(
+        boost::shared_ptr<sph::recv_packet_streamer> my_streamer =
+            boost::dynamic_pointer_cast<sph::recv_packet_streamer>(
                 perif.rx_streamer.lock());
         if (my_streamer)
             my_streamer->set_tick_rate(new_tick_rate);
         perif.framer->set_tick_rate(new_tick_rate);
     }
     for (radio_perifs_t& perif : _radio_perifs) {
-        std::shared_ptr<sph::send_packet_streamer> my_streamer =
-            std::dynamic_pointer_cast<sph::send_packet_streamer>(
+        boost::shared_ptr<sph::send_packet_streamer> my_streamer =
+            boost::dynamic_pointer_cast<sph::send_packet_streamer>(
                 perif.tx_streamer.lock());
         if (my_streamer)
             my_streamer->set_tick_rate(new_tick_rate);
@@ -204,8 +204,8 @@ double b200_impl::coerce_rx_samp_rate(
 
 void b200_impl::update_rx_samp_rate(const size_t dspno, const double rate)
 {
-    std::shared_ptr<sph::recv_packet_streamer> my_streamer =
-        std::dynamic_pointer_cast<sph::recv_packet_streamer>(
+    boost::shared_ptr<sph::recv_packet_streamer> my_streamer =
+        boost::dynamic_pointer_cast<sph::recv_packet_streamer>(
             _radio_perifs[dspno].rx_streamer.lock());
     if (not my_streamer)
         return;
@@ -231,8 +231,8 @@ double b200_impl::coerce_tx_samp_rate(
 
 void b200_impl::update_tx_samp_rate(const size_t dspno, const double rate)
 {
-    std::shared_ptr<sph::send_packet_streamer> my_streamer =
-        std::dynamic_pointer_cast<sph::send_packet_streamer>(
+    boost::shared_ptr<sph::send_packet_streamer> my_streamer =
+        boost::dynamic_pointer_cast<sph::send_packet_streamer>(
             _radio_perifs[dspno].tx_streamer.lock());
     if (not my_streamer)
         return;
@@ -255,8 +255,7 @@ uhd::usrp::subdev_spec_t b200_impl::coerce_subdev_spec(
     //
     // Any other spec is probably illegal and will be caught by
     // validate_subdev_spec().
-    if (!spec.empty()
-        and (_product == B200 or _product == B200MINI or _product == B205MINI)
+    if (spec.size() and (_product == B200 or _product == B200MINI or _product == B205MINI)
         and spec[0].sd_name == "B") {
         spec[0].sd_name = "A";
     }
@@ -267,7 +266,7 @@ void b200_impl::update_subdev_spec(
     const std::string& tx_rx, const uhd::usrp::subdev_spec_t& spec)
 {
     // sanity checking
-    if (!spec.empty()) {
+    if (spec.size()) {
         validate_subdev_spec(_tree, spec, tx_rx);
     }
 
@@ -315,7 +314,7 @@ bool b200_impl::recv_async_msg(async_metadata_t& async_metadata, double timeout)
  * there.
  */
 boost::optional<uhd::msg_task::msg_type_t> b200_impl::handle_async_task(
-    uhd::transport::zero_copy_if::sptr xport, std::shared_ptr<AsyncTaskData> data)
+    uhd::transport::zero_copy_if::sptr xport, boost::shared_ptr<AsyncTaskData> data)
 {
     managed_recv_buffer::sptr buff = xport->get_recv_buff();
     if (not buff or buff->size() < 8)
@@ -327,7 +326,7 @@ boost::optional<uhd::msg_task::msg_type_t> b200_impl::handle_async_task(
         case B200_RESP0_MSG_SID:
         case B200_RESP1_MSG_SID:
         case B200_LOCAL_RESP_SID: {
-            b200_radio_ctrl_core::sptr ctrl;
+            radio_ctrl_core_3000::sptr ctrl;
             if (sid == B200_RESP0_MSG_SID)
                 ctrl = data->radio_ctrl[0].lock();
             if (sid == B200_RESP1_MSG_SID)
@@ -406,7 +405,7 @@ rx_streamer::sptr b200_impl::get_rx_stream(const uhd::stream_args_t& args_)
     }
     check_streamer_args(args, this->get_tick_rate(), "RX");
 
-    std::shared_ptr<sph::recv_packet_streamer> my_streamer;
+    boost::shared_ptr<sph::recv_packet_streamer> my_streamer;
     for (size_t stream_i = 0; stream_i < args.channels.size(); stream_i++) {
         const size_t radio_index =
             _tree->access<std::vector<size_t>>("/mboards/0/rx_chan_dsp_mapping")
@@ -438,7 +437,7 @@ rx_streamer::sptr b200_impl::get_rx_stream(const uhd::stream_args_t& args_)
 
         // make the new streamer given the samples per packet
         if (not my_streamer)
-            my_streamer = std::make_shared<sph::recv_packet_streamer>(spp);
+            my_streamer = boost::make_shared<sph::recv_packet_streamer>(spp);
         my_streamer->resize(args.channels.size());
 
         // init some streamer stuff
@@ -459,17 +458,12 @@ rx_streamer::sptr b200_impl::get_rx_stream(const uhd::stream_args_t& args_)
         perif.ddc->setup(args);
         _demux->realloc_sid(sid);
         my_streamer->set_xport_chan_get_buff(stream_i,
-            std::bind(&recv_packet_demuxer_3000::get_recv_buff,
-                _demux,
-                sid,
-                std::placeholders::_1),
+            boost::bind(&recv_packet_demuxer_3000::get_recv_buff, _demux, sid, _1),
             true /*flush*/);
         my_streamer->set_overflow_handler(
-            stream_i, std::bind(&b200_impl::handle_overflow, this, radio_index));
+            stream_i, boost::bind(&b200_impl::handle_overflow, this, radio_index));
         my_streamer->set_issue_stream_cmd(stream_i,
-            std::bind(&rx_vita_core_3000::issue_stream_command,
-                perif.framer,
-                std::placeholders::_1));
+            boost::bind(&rx_vita_core_3000::issue_stream_command, perif.framer, _1));
         perif.rx_streamer = my_streamer; // store weak pointer
 
         // sets all tick and samp rates on this streamer
@@ -486,8 +480,8 @@ rx_streamer::sptr b200_impl::get_rx_stream(const uhd::stream_args_t& args_)
 
 void b200_impl::handle_overflow(const size_t radio_index)
 {
-    std::shared_ptr<sph::recv_packet_streamer> my_streamer =
-        std::dynamic_pointer_cast<sph::recv_packet_streamer>(
+    boost::shared_ptr<sph::recv_packet_streamer> my_streamer =
+        boost::dynamic_pointer_cast<sph::recv_packet_streamer>(
             _radio_perifs[radio_index].rx_streamer.lock());
     if (my_streamer->get_num_channels() == 2) // MIMO time
     {
@@ -496,9 +490,12 @@ void b200_impl::handle_overflow(const size_t radio_index)
             _radio_perifs[radio_index].framer->in_continuous_streaming_mode();
         // stop streaming
         my_streamer->issue_stream_cmd(stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS);
-        // flush data
-        while (_demux->get_recv_buff(B200_RX_DATA0_SID, 0.001)) {}
-        while (_demux->get_recv_buff(B200_RX_DATA1_SID, 0.001)) {}
+        // flush demux
+        _demux->realloc_sid(B200_RX_DATA0_SID);
+        _demux->realloc_sid(B200_RX_DATA1_SID);
+        // flush actual transport
+        while (_data_transport->get_recv_buff(0.001)) {
+        }
         // restart streaming
         if (in_continuous_streaming_mode) {
             stream_cmd_t stream_cmd(stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
@@ -507,13 +504,8 @@ void b200_impl::handle_overflow(const size_t radio_index)
                 _radio_perifs[radio_index].time64->get_time_now() + time_spec_t(0.01);
             my_streamer->issue_stream_cmd(stream_cmd);
         }
-    } else {
-        const uint32_t sid = radio_index == 0 ? B200_RX_DATA0_SID : B200_RX_DATA1_SID;
-        // flush data
-        while (_demux->get_recv_buff(sid, 0.001)) {}
-        // restart streaming
+    } else
         _radio_perifs[radio_index].framer->handle_overflow();
-    }
 }
 
 /***********************************************************************
@@ -535,7 +527,7 @@ tx_streamer::sptr b200_impl::get_tx_stream(const uhd::stream_args_t& args_)
     }
     check_streamer_args(args, this->get_tick_rate(), "TX");
 
-    std::shared_ptr<sph::send_packet_streamer> my_streamer;
+    boost::shared_ptr<sph::send_packet_streamer> my_streamer;
     for (size_t stream_i = 0; stream_i < args.channels.size(); stream_i++) {
         const size_t radio_index =
             _tree->access<std::vector<size_t>>("/mboards/0/tx_chan_dsp_mapping")
@@ -564,7 +556,7 @@ tx_streamer::sptr b200_impl::get_tx_stream(const uhd::stream_args_t& args_)
 
         // make the new streamer given the samples per packet
         if (not my_streamer)
-            my_streamer = std::make_shared<sph::send_packet_streamer>(spp);
+            my_streamer = boost::make_shared<sph::send_packet_streamer>(spp);
         my_streamer->resize(args.channels.size());
 
         // init some streamer stuff
@@ -582,13 +574,10 @@ tx_streamer::sptr b200_impl::get_tx_stream(const uhd::stream_args_t& args_)
         perif.deframer->setup(args);
         perif.duc->setup(args);
 
-        my_streamer->set_xport_chan_get_buff(stream_i,
-            std::bind(
-                &zero_copy_if::get_send_buff, _data_transport, std::placeholders::_1));
-        my_streamer->set_async_receiver(std::bind(&async_md_type::pop_with_timed_wait,
-            _async_task_data->async_md,
-            std::placeholders::_1,
-            std::placeholders::_2));
+        my_streamer->set_xport_chan_get_buff(
+            stream_i, boost::bind(&zero_copy_if::get_send_buff, _data_transport, _1));
+        my_streamer->set_async_receiver(boost::bind(
+            &async_md_type::pop_with_timed_wait, _async_task_data->async_md, _1, _2));
         my_streamer->set_xport_chan_sid(
             stream_i, true, radio_index ? B200_TX_DATA1_SID : B200_TX_DATA0_SID);
         my_streamer->set_enable_trailer(false); // TODO not implemented trailer support

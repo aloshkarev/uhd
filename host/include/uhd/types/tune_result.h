@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TYPES_TUNE_RESULT_H
+#define INCLUDED_UHD_TYPES_TUNE_RESULT_H
 
 #include <uhd/config.h>
 
@@ -45,3 +46,5 @@ UHD_API uhd::tune_result_t uhd_tune_result_c_to_cpp(uhd_tune_result_t *tune_resu
 UHD_API void uhd_tune_result_cpp_to_c(const uhd::tune_result_t &tune_result_cpp,
                                       uhd_tune_result_t *tune_result_c);
 #endif
+
+#endif /* INCLUDED_UHD_TYPES_TUNE_RESULT_H */

@@ -6,14 +6,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-if (POLICY CMP0094)
-  # See https://cmake.org/cmake/help/v3.15/policy/CMP0094.html
-  # set Python3_FIND_STRATEGY to LOCATION - this ensures that Python from
-  # sysroot is used first when cross-compiling
-  # note: policy CMP0094 is available starting with CMake 3.15
-  cmake_policy(SET CMP0094 NEW)
-endif()
-
 if(NOT DEFINED INCLUDED_UHD_PYTHON_CMAKE)
 set(INCLUDED_UHD_PYTHON_CMAKE TRUE)
 
@@ -27,9 +19,12 @@ if(PYTHON_EXECUTABLE)
     set(PYTHONINTERP_FOUND TRUE)
 endif(PYTHON_EXECUTABLE)
 
+# We always try to find Py3k first. Once we only support Py3k we can remove
+# most of this.
 if(NOT PYTHONINTERP_FOUND)
-    find_package(Python3 ${PYTHON_MIN_VERSION} QUIET)
+    find_package(Python3 ${PYTHON3_MIN_VERSION} QUIET)
     if(Python3_Interpreter_FOUND)
+        set(PYTHON_MIN_VERSION ${PYTHON3_MIN_VERSION})
         set(PYTHON_VERSION ${Python3_VERSION})
         set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
         set(PYTHONINTERP_FOUND TRUE)
@@ -37,16 +32,41 @@ if(NOT PYTHONINTERP_FOUND)
 endif(NOT PYTHONINTERP_FOUND)
 
 if(NOT PYTHONINTERP_FOUND)
-    find_package(PythonInterp ${PYTHON_MIN_VERSION} QUIET)
+    find_package(PythonInterp ${PYTHON3_MIN_VERSION} QUIET)
     if(PYTHONINTERP_FOUND)
+        set(PYTHON_MIN_VERSION ${PYTHON3_MIN_VERSION})
         set(PYTHON_VERSION ${PYTHON_VERSION_STRING})
     endif(PYTHONINTERP_FOUND)
+endif(NOT PYTHONINTERP_FOUND)
+
+# Next, try and find Py2k.
+if(NOT PYTHONINTERP_FOUND)
+    find_package(Python2 ${PYTHON_MIN_VERSION} QUIET)
+    if(Python2_Interpreter_FOUND)
+        set(PYTHON_VERSION ${Python2_VERSION})
+        set(PYTHON_EXECUTABLE ${Python2_EXECUTABLE})
+        set(PYTHONINTERP_FOUND TRUE)
+    endif(Python2_Interpreter_FOUND)
+endif(NOT PYTHONINTERP_FOUND)
+
+if(NOT PYTHONINTERP_FOUND)
+    find_package(PythonInterp ${PYTHON_MIN_VERSION} QUIET)
+    set(PYTHON_VERSION ${PYTHON_VERSION_STRING})
 endif(NOT PYTHONINTERP_FOUND)
 
 # If that fails, try using the build-in find program routine.
 if(NOT PYTHONINTERP_FOUND)
     message(STATUS "Attempting to find Python without CMake...")
-    find_program(PYTHON_EXECUTABLE NAMES python3 python3.6 python3.7 python3.8 python3.9)
+    find_program(PYTHON_EXECUTABLE NAMES python3 python3.5 python3.6 python3.7 python3.8)
+    if(PYTHON_EXECUTABLE)
+        set(PYTHONINTERP_FOUND TRUE)
+        set(PYTHON_MIN_VERSION ${PYTHON3_MIN_VERSION})
+    endif(PYTHON_EXECUTABLE)
+endif(NOT PYTHONINTERP_FOUND)
+
+if(NOT PYTHONINTERP_FOUND)
+    message(STATUS "Attempting to find Python without CMake...")
+    find_program(PYTHON_EXECUTABLE NAMES python2 python2.7)
     if(PYTHON_EXECUTABLE)
         set(PYTHONINTERP_FOUND TRUE)
     endif(PYTHON_EXECUTABLE)
@@ -55,6 +75,7 @@ endif(NOT PYTHONINTERP_FOUND)
 if(NOT PYTHON_VERSION)
     message(STATUS "Manually determining build Python version...")
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "
+from __future__ import print_function
 import sys
 print('{}.{}.{}'.format(
     sys.version_info.major,
@@ -81,22 +102,9 @@ message(STATUS "Override with: -DPYTHON_EXECUTABLE=<path-to-python>")
 
 #this allows the user to override RUNTIME_PYTHON_EXECUTABLE
 if(NOT RUNTIME_PYTHON_EXECUTABLE)
-    if(CMAKE_CROSSCOMPILING)
-        message(STATUS "Cross compiling, setting python runtime to /usr/bin/python3")
-        message(STATUS "and interpreter to min. required version ${PYTHON_MIN_VERSION}")
-        message(STATUS "If this is not what you want, please set RUNTIME_PYTHON_EXECUTABLE")
-        message(STATUS "and RUNTIME_PYTHON_VERSION manually")
-        set(RUNTIME_PYTHON_EXECUTABLE "/usr/bin/python3")
-        set(RUNTIME_PYTHON_VERSION ${PYTHON_MIN_VERSION})
-        set(EXACT_ARGUMENT "")
-    else(CMAKE_CROSSCOMPILING)
-        #default to the buildtime interpreter
-        set(RUNTIME_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
-        set(RUNTIME_PYTHON_VERSION ${PYTHON_VERSION})
-        set(EXACT_ARGUMENT "EXACT")
-    endif(CMAKE_CROSSCOMPILING)
-else(NOT RUNTIME_PYTHON_EXECUTABLE)
-    set(EXACT_ARGUMENT "EXACT")
+    #default to the buildtime interpreter
+    set(RUNTIME_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
+    set(RUNTIME_PYTHON_VERSION ${PYTHON_VERSION})
 endif(NOT RUNTIME_PYTHON_EXECUTABLE)
 
 if(NOT RUNTIME_PYTHON_VERSION)
@@ -157,11 +165,11 @@ endmacro(PYTHON_CHECK_MODULE)
 # - See if Python3_LIBRARIES is already set (or Python2_LIBRARIES)
 if(NOT PYTHON_LIBRARIES OR NOT PYTHON_INCLUDE_DIRS)
     message(STATUS "Finding Python Libraries...")
-    find_package(PythonLibs ${RUNTIME_PYTHON_VERSION} ${EXACT_ARGUMENT} QUIET)
-    if(NOT RUNTIME_PYTHON_VERSION VERSION_LESS 3)
+    find_package(PythonLibs ${RUNTIME_PYTHON_VERSION} EXACT QUIET)
+    if(RUNTIME_PYTHON_VERSION VERSION_LESS 3)
         if(NOT PYTHON_LIBRARIES OR NOT PYTHON_INCLUDE_DIRS)
             find_package(Python3 ${RUNTIME_PYTHON_VERSION}
-                ${EXACT_ARGUMENT}
+                EXACT
                 QUIET
                 COMPONENTS Interpreter Development)
             if(Python3_Development_FOUND)
@@ -169,10 +177,10 @@ if(NOT PYTHON_LIBRARIES OR NOT PYTHON_INCLUDE_DIRS)
                 set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
             endif(Python3_Development_FOUND)
         endif(NOT PYTHON_LIBRARIES OR NOT PYTHON_INCLUDE_DIRS)
-    else(NOT RUNTIME_PYTHON_VERSION VERSION_LESS 3)
+    else(RUNTIME_PYTHON_VERSION VERSION_LESS 3)
         if(NOT PYTHON_LIBRARIES OR NOT PYTHON_INCLUDE_DIRS)
             find_package(Python2 ${RUNTIME_PYTHON_VERSION}
-                ${EXACT_ARGUMENT}
+                EXACT
                 QUIET
                 COMPONENTS Interpreter Development)
             if(Python2_Development_FOUND)
@@ -180,7 +188,7 @@ if(NOT PYTHON_LIBRARIES OR NOT PYTHON_INCLUDE_DIRS)
                 set(PYTHON_INCLUDE_DIRS ${Python2_INCLUDE_DIRS})
             endif(Python2_Development_FOUND)
         endif(NOT PYTHON_LIBRARIES OR NOT PYTHON_INCLUDE_DIRS)
-    endif(NOT RUNTIME_PYTHON_VERSION VERSION_LESS 3)
+    endif(RUNTIME_PYTHON_VERSION VERSION_LESS 3)
     if(NOT PYTHON_LIBRARIES OR NOT PYTHON_INCLUDE_DIRS)
         message(STATUS "Could not find Python Libraries.")
     endif(NOT PYTHON_LIBRARIES OR NOT PYTHON_INCLUDE_DIRS)

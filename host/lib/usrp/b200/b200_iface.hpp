@@ -15,7 +15,7 @@
 #include <uhdlib/usrp/common/ad9361_ctrl.hpp>
 #include <stdint.h>
 #include <boost/assign/list_of.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 enum b200_product_t { B200, B210, B200MINI, B205MINI };
 
@@ -58,7 +58,7 @@ static const uhd::dict<b200_product_t, std::string> B2XX_FPGA_FILE_NAME =
 class UHD_API b200_iface : uhd::noncopyable, public virtual uhd::i2c_iface
 {
 public:
-    typedef std::shared_ptr<b200_iface> sptr;
+    typedef boost::shared_ptr<b200_iface> sptr;
 
     /*!
      * Make a b200 interface object from a control transport
@@ -94,11 +94,11 @@ public:
     //! load a bootloader image onto device EEPROM
     virtual uint32_t load_bootloader(const std::string filestring) = 0;
 
-    void write_eeprom(
-        uint16_t addr, uint16_t offset, const uhd::byte_vector_t& bytes) override = 0;
+    virtual void write_eeprom(
+        uint16_t addr, uint16_t offset, const uhd::byte_vector_t& bytes) = 0;
 
-    uhd::byte_vector_t read_eeprom(
-        uint16_t addr, uint16_t offset, size_t num_bytes) override = 0;
+    virtual uhd::byte_vector_t read_eeprom(
+        uint16_t addr, uint16_t offset, size_t num_bytes) = 0;
 
     static std::string fx3_state_string(uint8_t state);
 };

@@ -18,13 +18,13 @@
 #include <uhd/utils/tasks.hpp>
 #include <boost/asio.hpp> //used for htonl and ntohl
 #include <boost/assign/list_of.hpp>
+#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/tokenizer.hpp>
 #include <algorithm>
 #include <chrono>
-#include <functional>
 #include <iostream>
 #include <thread>
 
@@ -76,7 +76,7 @@ public:
         mb_eeprom = usrp2_impl::get_mb_eeprom(*this);
     }
 
-    ~usrp2_iface_impl(void) override
+    ~usrp2_iface_impl(void)
     {
         UHD_SAFE_CALL(this->lock_device(false);)
     }
@@ -85,18 +85,18 @@ public:
      * Device locking
      **********************************************************************/
 
-    void lock_device(bool lock) override
+    void lock_device(bool lock)
     {
         if (lock) {
             this->pokefw(U2_FW_REG_LOCK_GPID, get_process_hash());
-            _lock_task = task::make(std::bind(&usrp2_iface_impl::lock_task, this));
+            _lock_task = task::make(boost::bind(&usrp2_iface_impl::lock_task, this));
         } else {
             _lock_task.reset(); // shutdown the task
             this->pokefw(U2_FW_REG_LOCK_TIME, 0); // unlock
         }
     }
 
-    bool is_device_locked(void) override
+    bool is_device_locked(void)
     {
         // never assume lock with fpga image mismatch
         if ((this->peek32(U2_REG_COMPAT_NUM_RB) >> 16) != USRP2_FPGA_COMPAT_NUM)
@@ -135,32 +135,32 @@ public:
     /***********************************************************************
      * Peek and Poke
      **********************************************************************/
-    void poke32(const wb_addr_type addr, const uint32_t data) override
+    void poke32(const wb_addr_type addr, const uint32_t data)
     {
         this->get_reg<uint32_t, USRP2_REG_ACTION_FPGA_POKE32>(addr, data);
     }
 
-    uint32_t peek32(const wb_addr_type addr) override
+    uint32_t peek32(const wb_addr_type addr)
     {
         return this->get_reg<uint32_t, USRP2_REG_ACTION_FPGA_PEEK32>(addr);
     }
 
-    void poke16(const wb_addr_type addr, const uint16_t data) override
+    void poke16(const wb_addr_type addr, const uint16_t data)
     {
         this->get_reg<uint16_t, USRP2_REG_ACTION_FPGA_POKE16>(addr, data);
     }
 
-    uint16_t peek16(const wb_addr_type addr) override
+    uint16_t peek16(const wb_addr_type addr)
     {
         return this->get_reg<uint16_t, USRP2_REG_ACTION_FPGA_PEEK16>(addr);
     }
 
-    void pokefw(wb_addr_type addr, uint32_t data) override
+    void pokefw(wb_addr_type addr, uint32_t data)
     {
         this->get_reg<uint32_t, USRP2_REG_ACTION_FW_POKE32>(addr, data);
     }
 
-    uint32_t peekfw(wb_addr_type addr) override
+    uint32_t peekfw(wb_addr_type addr)
     {
         return this->get_reg<uint32_t, USRP2_REG_ACTION_FW_PEEK32>(addr);
     }
@@ -189,7 +189,7 @@ public:
         const spi_config_t& config,
         uint32_t data,
         size_t num_bits,
-        bool readback) override
+        bool readback)
     {
         static const uhd::dict<spi_config_t::edge_t, int> spi_edge_to_otw =
             boost::assign::map_list_of(spi_config_t::EDGE_RISE, USRP2_CLK_EDGE_RISE)(
@@ -216,7 +216,7 @@ public:
     /***********************************************************************
      * I2C
      **********************************************************************/
-    void write_i2c(uint16_t addr, const byte_vector_t& buf) override
+    void write_i2c(uint16_t addr, const byte_vector_t& buf)
     {
         // setup the out data
         usrp2_ctrl_data_t out_data   = usrp2_ctrl_data_t();
@@ -236,7 +236,7 @@ public:
         UHD_ASSERT_THROW(ntohl(in_data.id) == USRP2_CTRL_ID_COOL_IM_DONE_I2C_WRITE_DUDE);
     }
 
-    byte_vector_t read_i2c(uint16_t addr, size_t num_bytes) override
+    byte_vector_t read_i2c(uint16_t addr, size_t num_bytes)
     {
         // setup the out data
         usrp2_ctrl_data_t out_data   = usrp2_ctrl_data_t();
@@ -324,7 +324,7 @@ public:
         throw timeout_error("no control response, possible packet loss");
     }
 
-    rev_type get_rev(void) override
+    rev_type get_rev(void)
     {
         std::string hw = mb_eeprom["hardware"];
         if (hw.empty())
@@ -347,7 +347,7 @@ public:
         return USRP_NXXX; // unknown type
     }
 
-    const std::string get_cname(void) override
+    const std::string get_cname(void)
     {
         switch (this->get_rev()) {
             case USRP2_REV3:
@@ -368,14 +368,14 @@ public:
         UHD_THROW_INVALID_CODE_PATH();
     }
 
-    const std::string get_fw_version_string(void) override
+    const std::string get_fw_version_string(void)
     {
         uint32_t minor =
             this->get_reg<uint32_t, USRP2_REG_ACTION_FW_PEEK32>(U2_FW_REG_VER_MINOR);
         return str(boost::format("%u.%u") % _protocol_compat % minor);
     }
 
-    std::string images_warn_help_message(void) override
+    std::string images_warn_help_message(void)
     {
         // determine the images names
         std::string fw_image, fpga_image;
@@ -457,12 +457,12 @@ public:
         }
     }
 
-    void set_time(const time_spec_t&) override
+    void set_time(const time_spec_t&)
     {
         throw uhd::not_implemented_error("Timed commands not supported");
     }
 
-    time_spec_t get_time(void) override
+    time_spec_t get_time(void)
     {
         return (0.0);
     }

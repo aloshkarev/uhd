@@ -5,17 +5,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_AD9361_CTRL_HPP
+#define INCLUDED_AD9361_CTRL_HPP
 
 #include <uhd/exception.hpp>
+#include <uhd/transport/zero_copy.hpp>
 #include <uhd/types/filters.hpp>
 #include <uhd/types/ranges.hpp>
 #include <uhd/types/sensors.hpp>
 #include <uhd/types/serial.hpp>
-#include <uhd/utils/noncopyable.hpp>
 #include <ad9361_device.h>
+#include <boost/shared_ptr.hpp>
 #include <complex>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -39,7 +40,7 @@ namespace uhd { namespace usrp {
 class ad9361_ctrl : public uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<ad9361_ctrl> sptr;
+    typedef boost::shared_ptr<ad9361_ctrl> sptr;
 
     virtual ~ad9361_ctrl(void) {}
 
@@ -161,3 +162,5 @@ public:
 };
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_AD9361_CTRL_HPP */

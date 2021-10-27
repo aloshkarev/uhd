@@ -5,13 +5,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_GAIN_GROUP_HPP
+#define INCLUDED_UHD_UTILS_GAIN_GROUP_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/ranges.hpp>
 #include <uhd/utils/noncopyable.hpp>
-#include <functional>
-#include <memory>
+#include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 #include <string>
 #include <vector>
 
@@ -22,15 +23,15 @@ namespace uhd {
  */
 struct UHD_API gain_fcns_t
 {
-    std::function<gain_range_t(void)> get_range;
-    std::function<double(void)> get_value;
-    std::function<void(double)> set_value;
+    boost::function<gain_range_t(void)> get_range;
+    boost::function<double(void)> get_value;
+    boost::function<void(double)> set_value;
 };
 
 class UHD_API gain_group : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<gain_group> sptr;
+    typedef boost::shared_ptr<gain_group> sptr;
 
     virtual ~gain_group(void) = 0;
 
@@ -90,12 +91,8 @@ public:
      * \return a gain group object.
      */
     static sptr make(void);
-
-    /*!
-     * Make a new gain group with all zero values.
-     * \return a gain group object populated with zeroes
-     */
-    static sptr make_zero();
 };
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_UTILS_GAIN_GROUP_HPP */

@@ -5,18 +5,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_USB_CONTROL_HPP
+#define INCLUDED_UHD_TRANSPORT_USB_CONTROL_HPP
 
 #include <uhd/transport/usb_device_handle.hpp>
 #include <uhd/utils/noncopyable.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace uhd { namespace transport {
 
 class UHD_API usb_control : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<usb_control> sptr;
+    typedef boost::shared_ptr<usb_control> sptr;
 
     virtual ~usb_control(void);
 
@@ -58,3 +59,5 @@ public:
 };
 
 }} // namespace uhd::transport
+
+#endif /* INCLUDED_UHD_TRANSPORT_USB_CONTROL_HPP */

@@ -34,7 +34,9 @@ def comment_remover(text):
 
 def remove_trailing_whitespace(text):
     """ Remove, uh, trailing whitespace. """
-    pattern = re.compile(r' +$', re.DOTALL | re.MULTILINE)
+    pattern = re.compile(r' +$',
+        re.DOTALL | re.MULTILINE
+    )
     return re.sub(pattern, '', text)
 
 

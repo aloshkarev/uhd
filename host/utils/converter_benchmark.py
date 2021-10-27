@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Copyright 2015 Ettus Research LLC
 # Copyright 2018 Ettus Research, a National Instruments Company
@@ -9,10 +9,11 @@
 Wrap the converter_benchmark tool and produce prettier results.
 """
 
-import sys
+from __future__ import print_function
 import argparse
 import csv
 import subprocess
+from six import iteritems
 
 INTRO_SETUP = {
     'n_samples': {
@@ -38,7 +39,7 @@ TABLE_SETUP = {
 def run_benchmark(args):
     """ Run the tool with the given arguments, return the section in the {{{ }}} brackets """
     call_args = ['./converter_benchmark',]
-    for k, v in args.__dict__.items():
+    for k, v in iteritems(args.__dict__):
         k = k.replace('_', '-')
         if v is None:
             continue
@@ -48,17 +49,18 @@ def run_benchmark(args):
             continue
         call_args.append('--{0}'.format(k))
         call_args.append(str(v))
+    print(call_args)
     try:
         output = subprocess.check_output(call_args).decode('utf-8')
     except subprocess.CalledProcessError as ex:
-        print("Error running converter_benchmark:", ex.output.decode())
-        sys.exit(ex.returncode)
+        print(ex.output)
+        exit(ex.returncode)
     header_out, csv_output = output.split('{{{', 1)
     csv_output = csv_output.split('}}}', 1)
     assert len(csv_output) == 2 and csv_output[1].strip() == ''
     return header_out, csv_output[0]
 
-def print_stats_table(_, csv_output):
+def print_stats_table(args, csv_output):
     """
     Print stats.
     """
@@ -68,7 +70,7 @@ def print_stats_table(_, csv_output):
     for idx, row in enumerate(reader):
         if idx == 0:
             # Print intro:
-            for k, v in INTRO_SETUP.items():
+            for k, v in iteritems(INTRO_SETUP):
                 print("{title}: {value}".format(
                     title=v['title'],
                     value=row[title_row.index(k)],
@@ -158,8 +160,7 @@ def setup_argparse():
     )
     parser.add_argument(
         "--debug-converter", action='store_true',
-        help="Skip benchmark and print conversion results. Implies iterations==1 "
-             "and will only run on a single converter.",
+        help="Skip benchmark and print conversion results. Implies iterations==1 and will only run on a single converter.",
     )
     parser.add_argument(
         "--hex", action='store_true',
@@ -180,3 +181,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

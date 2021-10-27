@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_EEPROM_HPP
+#define INCLUDED_UHD_EEPROM_HPP
 
 #include <map>
 #include <string>
@@ -12,6 +13,8 @@
 
 namespace uhd {
 
-typedef std::map<std::string, std::vector<uint8_t>> eeprom_map_t;
+typedef std::map<std::string, std::vector<uint8_t> > eeprom_map_t;
 
 } /* namespace uhd */
+
+#endif /* INCLUDED_UHD_EEPROM_HPP */

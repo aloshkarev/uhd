@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_VRT_IF_PACKET_HPP
+#define INCLUDED_UHD_TRANSPORT_VRT_IF_PACKET_HPP
 
 #include <uhd/config.hpp>
 #include <stdint.h>
@@ -195,3 +196,5 @@ UHD_INLINE if_packet_info_t::if_packet_info_t(void)
 }
 
 }}} // namespace uhd::transport::vrt
+
+#endif /* INCLUDED_UHD_TRANSPORT_VRT_IF_PACKET_HPP */

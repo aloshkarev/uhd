@@ -21,18 +21,38 @@ set(ENABLE_MANUAL_OR_DOXYGEN false)
 ########################################################################
 LIBUHD_REGISTER_COMPONENT("Manual" ENABLE_MANUAL ON "DOXYGEN_FOUND" OFF OFF)
 
+# Check if fpga submodule is there. If yes:
+# - Add fpga-src/docs and fpga-src/README.md to inputs
+# - Add fpga-src docs dirs to strip?
+# If no:
+# - Make FPGA Manual reference link to our website
+
 if(ENABLE_MANUAL)
-    set(FPGA_SOURCE_DIR "${UHD_SOURCE_DIR}/../fpga")
     set(ENABLE_MANUAL_OR_DOXYGEN true)
+    # First: Set up UHD manual only
     file(GLOB manual_sources "*.dox")
-    file(GLOB_RECURSE fpga_manual_sources "${FPGA_SOURCE_DIR}/docs/*.md")
-    list(APPEND manual_sources ${fpga_manual_sources})
     set(DOXYGEN_DEPENDENCIES ${manual_sources})
-    set(DOXYGEN_INPUT_DIRS "${UHD_SOURCE_DIR}/docs ${CMAKE_CURRENT_BINARY_DIR} ${FPGA_SOURCE_DIR}/docs")
+    set(DOXYGEN_INPUT_DIRS "${UHD_SOURCE_DIR}/docs ${CMAKE_CURRENT_BINARY_DIR}")
     set(DOXYGEN_DEP_COMPONENT "manual")
-    set(DOXYGEN_FPGA_MANUAL_REFERENCE "\\subpage md_fpga \"Part III: FPGA Manual\"")
-    set(DOXYGEN_STRIP_EXTRA "${UHD_SOURCE_DIR}/../fpga/docs")
+    set(DOXYGEN_FPGA_MANUAL_REFERENCE "<a href=\"http://files.ettus.com/manual/md_fpga.html\">Part III: FPGA Manual</a>")
+    set(DOXYGEN_STRIP_EXTRA "")
     set(DOXYGEN_EXCLUDE_DIRS "")
+    if(NOT ENABLE_RFNOC)
+        set(DOXYGEN_EXCLUDE_DIRS "${DOXYGEN_EXCLUDE_DIRS} ${UHD_SOURCE_DIR}/include/uhd/rfnoc")
+    endif(NOT ENABLE_RFNOC)
+    # Now, check if we have the FPGA sources as well.
+    # If so, pull them in:
+    if(HAS_FPGA_SUBMODULE)
+        file(GLOB_RECURSE fpga_manual_sources "${FPGA_SUBMODULE_DIR}/docs/*.md")
+        list(APPEND manual_sources ${fpga_manual_sources})
+        set(DOXYGEN_INPUT_DIRS "${DOXYGEN_INPUT_DIRS} ${FPGA_SUBMODULE_DIR}/docs")
+        set(DOXYGEN_FPGA_MANUAL_REFERENCE "\\subpage md_fpga \"Part III: FPGA Manual\"")
+	set(DOXYGEN_STRIP_EXTRA "${FPGA_SUBMODULE_DIR}/docs")
+    endif(HAS_FPGA_SUBMODULE)
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/mainpage.dox.in
+        ${CMAKE_CURRENT_BINARY_DIR}/mainpage.dox
+    @ONLY)
 endif(ENABLE_MANUAL)
 
 ########################################################################
@@ -53,7 +73,7 @@ if(ENABLE_DOXYGEN)
     file(GLOB_RECURSE header_files ${UHD_SOURCE_DIR}/include/*.hpp)
     file(GLOB_RECURSE h_files ${UHD_SOURCE_DIR}/include/*.h)
     list(APPEND header_files ${h_files})
-    set(DOXYGEN_DEPENDENCIES ${DOXYGEN_DEPENDENCIES} ${header_files})
+    set(DOXYGEN_DEPENDENCIES ${DOXYGEN_DEPENDENCIES} ${header_files} "${UHD_SOURCE_DIR}/lib/rfnoc/nocscript/gen_basic_funcs.py")
     if(ENABLE_DOXYGEN_FULL)
         set(DOXYGEN_INPUT_DIRS "${DOXYGEN_INPUT_DIRS} ${UHD_SOURCE_DIR}/include ${UHD_SOURCE_DIR}/lib ${UHD_SOURCE_DIR}/python")
     else(ENABLE_DOXYGEN_FULL)

@@ -63,7 +63,7 @@ subdev_spec_t::subdev_spec_t(const std::string& markup)
 
 std::string subdev_spec_t::to_pp_string(void) const
 {
-    if (this->empty())
+    if (this->size() == 0)
         return "Empty Subdevice Specification";
 
     std::stringstream ss;

@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_DIRTY_TRACKED_HPP
+#define INCLUDED_UHD_UTILS_DIRTY_TRACKED_HPP
 
 namespace uhd {
 /*!
@@ -44,7 +45,13 @@ public:
     {
     }
 
-    dirty_tracked(const uhd::dirty_tracked<data_t>&) = default;
+    /*!
+     * Copy ctor: Assign source to this type
+     */
+    dirty_tracked(const dirty_tracked& source)
+    {
+        *this = source;
+    }
 
     /*!
      * Get underlying data
@@ -123,3 +130,5 @@ private:
 };
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_UTILS_DIRTY_TRACKED_HPP */

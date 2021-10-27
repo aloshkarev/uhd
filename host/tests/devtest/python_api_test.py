@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Copyright 2018 Ettus Research, a National Instruments Company
 #
@@ -6,26 +6,33 @@
 #
 """ Test Python API """
 
+from __future__ import print_function
 import os
-import sys
 from uhd_test_base import shell_application
-from uhd_test_base import UHDPythonTestCase
+from uhd_test_base import uhd_test_case
+try:
+    import uhd
+except ImportError:
+    uhd = None
 
-class uhd_python_api_test(UHDPythonTestCase):
+
+class uhd_python_api_test(uhd_test_case):
     """ Run multi_usrp_test """
-    test_name = 'uhd_python_api_test'
-
-    def run_test(self, test_name, test_args):
+    def test_api(self):
         """
         Run test and report results.
         """
+        if uhd is None:
+            print("Skipping test, Python API not installed.")
+            self.report_result("python_api_tester", 'status', 'Skipped')
+            return
         devtest_src_dir = os.getenv('_UHD_DEVTEST_SRC_DIR', '')
+        multi_usrp_test_path = \
+            os.path.join(devtest_src_dir, 'multi_usrp_test.py')
         args = [
-            os.path.join(devtest_src_dir, 'multi_usrp_test.py'),
             self.create_addr_args_str(),
         ]
-        # The 'app' we are running is just another Python process
-        app = shell_application(sys.executable)
+        app = shell_application(multi_usrp_test_path)
         app.run(args)
         run_results = {
             'return_code': app.returncode,
@@ -48,4 +55,3 @@ class uhd_python_api_test(UHDPythonTestCase):
                 'status',
                 'Passed' if run_results['passed'] else 'Failed',
             )
-        return run_results

@@ -39,7 +39,7 @@ if(UHD_DIR)
     list(APPEND UHD_LIBDIR_HINTS ${UHD_DIR}/lib)
 endif()
 
-find_package(PkgConfig QUIET)
+include(FindPkgConfig)
 if(PKG_CONFIG_FOUND)
   if(NOT ${CMAKE_VERSION} VERSION_LESS "2.8.0")
     set(UHD_QUIET "QUIET")

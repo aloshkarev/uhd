@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_PATHS_HPP
+#define INCLUDED_UHD_UTILS_PATHS_HPP
 
 #include <uhd/config.hpp>
 #include <boost/filesystem.hpp>
@@ -19,14 +20,14 @@ namespace uhd {
 //! Get a string representing the system's temporary directory
 UHD_API std::string get_tmp_path(void);
 
+//! Get a string representing the system's appdata directory
+UHD_API std::string get_app_path(void);
+
 //! Get a string representing the system's library directory
 UHD_API std::string get_lib_path(void);
 
 //! Get a string representing the system's pkg directory
 UHD_API std::string get_pkg_path(void);
-
-//! Get a string representing the location of the calibration database
-UHD_API std::string get_cal_data_path(void);
 
 //! Get UHD library paths
 UHD_API std::vector<fs::path> get_module_paths(void);
@@ -81,3 +82,5 @@ UHD_API std::string find_utility(const std::string& name);
 UHD_API std::string print_utility_error(
     const std::string& name, const std::string& args = "");
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_UTILS_PATHS_HPP */

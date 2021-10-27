@@ -10,12 +10,12 @@
 
 #include <uhd/types/serial.hpp>
 #include <uhd/utils/noncopyable.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 class x300_adc_ctrl : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<x300_adc_ctrl> sptr;
+    typedef boost::shared_ptr<x300_adc_ctrl> sptr;
 
     virtual ~x300_adc_ctrl(void) = 0;
 

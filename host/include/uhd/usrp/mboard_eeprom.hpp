@@ -6,7 +6,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_USRP_MBOARD_EEPROM_HPP
+#define INCLUDED_UHD_USRP_MBOARD_EEPROM_HPP
 
 #include <uhd/types/dict.hpp>
 #include <string>
@@ -27,3 +28,5 @@ namespace uhd { namespace usrp {
 typedef uhd::dict<std::string, std::string> mboard_eeprom_t;
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_UHD_USRP_MBOARD_EEPROM_HPP */

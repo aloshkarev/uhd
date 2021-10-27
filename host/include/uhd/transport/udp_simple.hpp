@@ -5,20 +5,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_UDP_SIMPLE_HPP
+#define INCLUDED_UHD_TRANSPORT_UDP_SIMPLE_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/serial.hpp>
 #include <uhd/utils/noncopyable.hpp>
 #include <boost/asio/buffer.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace uhd { namespace transport {
 
 class UHD_API udp_simple : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<udp_simple> sptr;
+    typedef boost::shared_ptr<udp_simple> sptr;
 
     virtual ~udp_simple(void) = 0;
 
@@ -93,3 +94,5 @@ public:
 };
 
 }} // namespace uhd::transport
+
+#endif /* INCLUDED_UHD_TRANSPORT_UDP_SIMPLE_HPP */

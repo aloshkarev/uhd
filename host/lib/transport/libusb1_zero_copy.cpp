@@ -12,13 +12,20 @@
 #include <uhd/transport/buffer_pool.hpp>
 #include <uhd/transport/usb_zero_copy.hpp>
 #include <uhd/utils/log.hpp>
+#include <boost/bind.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/format.hpp>
+#include <boost/function.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
-#include <functional>
 #include <list>
-#include <memory>
+
+#ifdef UHD_TXRX_DEBUG_PRINTS
+#    include <boost/format.hpp>
+#    include <fstream>
+#    include <vector>
+#endif
 
 using namespace uhd;
 using namespace uhd::transport;
@@ -28,7 +35,7 @@ static const size_t DEFAULT_XFER_SIZE = 32 * 512; // bytes
 
 //! type for sharing the release queue with managed buffers
 class libusb_zero_copy_mb;
-typedef std::shared_ptr<bounded_buffer<libusb_zero_copy_mb*>> mb_queue_sptr;
+typedef boost::shared_ptr<bounded_buffer<libusb_zero_copy_mb*>> mb_queue_sptr;
 
 /*!
  * The libusb docs state that status and actual length can only be read in the callback.
@@ -108,31 +115,27 @@ static void LIBUSB_CALL libusb_async_cb(libusb_transfer* lut)
  * Reusable managed buffer:
  *  - Associated with a particular libusb transfer struct.
  *  - Submits the transfer to libusb in the release method.
- *
- * A note on the USB context: None of the libusb calls made in this class
- * require passing in a USB context. The context is implied by virtue of the
- * libusb_transfer struct we pass in, which contains a device handle, which
- * contains a context.
  **********************************************************************/
 class libusb_zero_copy_mb : public managed_buffer
 {
 public:
     libusb_zero_copy_mb(libusb_transfer* lut,
         const size_t frame_size,
-        std::function<void(libusb_zero_copy_mb*)> release_cb,
+        boost::function<void(libusb_zero_copy_mb*)> release_cb,
         const bool is_recv,
         const std::string& name)
         : _release_cb(release_cb)
         , _is_recv(is_recv)
         , _name(name)
+        , _ctx(libusb::session::get_global_session()->get_context())
         , _lut(lut)
         , _frame_size(frame_size)
     { /* NOP */
     }
 
-    ~libusb_zero_copy_mb(void) override;
+    virtual ~libusb_zero_copy_mb(void);
 
-    void release(void) override
+    void release(void)
     {
         _release_cb(this);
     }
@@ -195,9 +198,10 @@ public:
     }
 
 private:
-    std::function<void(libusb_zero_copy_mb*)> _release_cb;
+    boost::function<void(libusb_zero_copy_mb*)> _release_cb;
     const bool _is_recv;
     const std::string _name;
+    libusb_context* _ctx;
     libusb_transfer* _lut;
     const size_t _frame_size;
 };
@@ -253,11 +257,9 @@ public:
             libusb_transfer* lut = libusb_alloc_transfer(0);
             UHD_ASSERT_THROW(lut != NULL);
 
-            _mb_pool.push_back(std::make_shared<libusb_zero_copy_mb>(lut,
+            _mb_pool.push_back(boost::make_shared<libusb_zero_copy_mb>(lut,
                 this->get_frame_size(),
-                std::bind(&libusb_zero_copy_single::enqueue_buffer,
-                    this,
-                    std::placeholders::_1),
+                boost::bind(&libusb_zero_copy_single::enqueue_buffer, this, _1),
                 is_recv,
                 name));
 
@@ -349,7 +351,7 @@ private:
 
     //! Storage for transfer related objects
     buffer_pool::sptr _buffer_pool;
-    std::vector<std::shared_ptr<libusb_zero_copy_mb>> _mb_pool;
+    std::vector<boost::shared_ptr<libusb_zero_copy_mb>> _mb_pool;
 
     boost::mutex _queue_mutex;
     boost::condition_variable _buff_ready_cond;
@@ -412,39 +414,39 @@ struct libusb_zero_copy_impl : usb_zero_copy
             size_t(hints.cast<double>("send_frame_size", DEFAULT_XFER_SIZE))));
     }
 
-    ~libusb_zero_copy_impl(void) override;
+    virtual ~libusb_zero_copy_impl(void);
 
-    managed_recv_buffer::sptr get_recv_buff(double timeout) override
+    managed_recv_buffer::sptr get_recv_buff(double timeout)
     {
         boost::mutex::scoped_lock l(_recv_mutex);
         return _recv_impl->get_buff<managed_recv_buffer>(timeout);
     }
 
-    managed_send_buffer::sptr get_send_buff(double timeout) override
+    managed_send_buffer::sptr get_send_buff(double timeout)
     {
         boost::mutex::scoped_lock l(_send_mutex);
         return _send_impl->get_buff<managed_send_buffer>(timeout);
     }
 
-    size_t get_num_recv_frames(void) const override
+    size_t get_num_recv_frames(void) const
     {
         return _recv_impl->get_num_frames();
     }
-    size_t get_num_send_frames(void) const override
+    size_t get_num_send_frames(void) const
     {
         return _send_impl->get_num_frames();
     }
 
-    size_t get_recv_frame_size(void) const override
+    size_t get_recv_frame_size(void) const
     {
         return _recv_impl->get_frame_size();
     }
-    size_t get_send_frame_size(void) const override
+    size_t get_send_frame_size(void) const
     {
         return _send_impl->get_frame_size();
     }
 
-    std::shared_ptr<libusb_zero_copy_single> _recv_impl, _send_impl;
+    boost::shared_ptr<libusb_zero_copy_single> _recv_impl, _send_impl;
     boost::mutex _recv_mutex, _send_mutex;
 };
 
@@ -472,7 +474,7 @@ usb_zero_copy::sptr usb_zero_copy::make(usb_device_handle::sptr handle,
     const device_addr_t& hints)
 {
     libusb::device_handle::sptr dev_handle(libusb::device_handle::get_cached_handle(
-        std::static_pointer_cast<libusb::special_handle>(handle)->get_device()));
+        boost::static_pointer_cast<libusb::special_handle>(handle)->get_device()));
     return sptr(new libusb_zero_copy_impl(
         dev_handle, recv_interface, recv_endpoint, send_interface, send_endpoint, hints));
 }

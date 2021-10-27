@@ -127,15 +127,14 @@ struct convert_sc12_item32_1_to_star_2 : public converter
         // NOP
     }
 
-    void set_scalar(const double scalar) override
+    void set_scalar(const double scalar)
     {
         const int unpack_growth = 16;
         _scalar                 = scalar / unpack_growth;
     }
 
-    void operator()(const input_type& inputs,
-        const output_type& outputs,
-        const size_t nsamps) override
+    void operator()(
+        const input_type& inputs, const output_type& outputs, const size_t nsamps)
     {
         const size_t head_samps = size_t(inputs[0]) & 0x3;
         size_t rewind           = 0;

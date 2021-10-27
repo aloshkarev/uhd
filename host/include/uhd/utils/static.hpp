@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_STATIC_HPP
+#define INCLUDED_UHD_UTILS_STATIC_HPP
 
 #include <uhd/config.hpp>
 
@@ -37,3 +38,5 @@ struct UHD_API _uhd_static_fixture
 {
     _uhd_static_fixture(void (*)(void), const char*);
 };
+
+#endif /* INCLUDED_UHD_UTILS_STATIC_HPP */

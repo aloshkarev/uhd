@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_USRP_GPIO_DEFS_LIB_HPP
+#define INCLUDED_LIBUHD_USRP_GPIO_DEFS_LIB_HPP
 
 #include <uhd/usrp/gpio_defs.hpp>
 #include <map>
@@ -97,3 +98,5 @@ static const std::map<std::string, std::map<std::string, uint32_t>> gpio_attr_va
     {GPIO_ATTR_READBACK, uhd::usrp::gpio_atr::gpio_level_map}};
 
 }}} // namespace uhd::usrp::gpio_atr
+
+#endif /* INCLUDED_LIBUHD_USRP_GPIO_DEFS_LIB_HPP */

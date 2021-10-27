@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_USRP_DBOARD_BASE_HPP
+#define INCLUDED_UHD_USRP_DBOARD_BASE_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/property_tree.hpp>
@@ -13,7 +14,7 @@
 #include <uhd/usrp/dboard_iface.hpp>
 #include <uhd/utils/noncopyable.hpp>
 #include <uhd/utils/pimpl.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace uhd { namespace usrp {
 
@@ -24,7 +25,7 @@ namespace uhd { namespace usrp {
 class UHD_API dboard_base : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<dboard_base> sptr;
+    typedef boost::shared_ptr<dboard_base> sptr;
     /*!
      * An opaque type for the dboard constructor args.
      * Derived classes should pass the args into the base class,
@@ -64,7 +65,7 @@ public:
      * Create a new xcvr dboard object, override in subclasses.
      */
     xcvr_dboard_base(ctor_args_t);
-    ~xcvr_dboard_base() override {}
+    virtual ~xcvr_dboard_base() {}
 };
 
 /*!
@@ -78,7 +79,7 @@ public:
      * Create a new rx dboard object, override in subclasses.
      */
     rx_dboard_base(ctor_args_t);
-    ~rx_dboard_base() override {}
+    virtual ~rx_dboard_base() {}
 };
 
 /*!
@@ -92,7 +93,9 @@ public:
      * Create a new rx dboard object, override in subclasses.
      */
     tx_dboard_base(ctor_args_t);
-    ~tx_dboard_base() override {}
+    virtual ~tx_dboard_base() {}
 };
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_UHD_USRP_DBOARD_BASE_HPP */

@@ -5,15 +5,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TRANSPORT_BOUNDED_BUFFER_IPP
+#define INCLUDED_UHD_TRANSPORT_BOUNDED_BUFFER_IPP
 
 #include <uhd/config.hpp>
 #include <uhd/utils/noncopyable.hpp>
+#include <boost/bind.hpp>
+#include <boost/utility.hpp>
+#include <boost/function.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/locks.hpp>
-#include <boost/utility.hpp>
-#include <functional>
 
 namespace uhd{ namespace transport{
 
@@ -24,8 +26,8 @@ namespace uhd{ namespace transport{
         bounded_buffer_detail(size_t capacity):
             _buffer(capacity)
         {
-            _not_full_fcn  = std::bind(&bounded_buffer_detail<elem_type>::not_full, this);
-            _not_empty_fcn = std::bind(&bounded_buffer_detail<elem_type>::not_empty, this);
+            _not_full_fcn  = boost::bind(&bounded_buffer_detail<elem_type>::not_full, this);
+            _not_empty_fcn = boost::bind(&bounded_buffer_detail<elem_type>::not_empty, this);
         }
 
         UHD_INLINE bool push_with_haste(const elem_type &elem)
@@ -131,7 +133,7 @@ namespace uhd{ namespace transport{
         bool not_full(void) const{return not _buffer.full();}
         bool not_empty(void) const{return not _buffer.empty();}
 
-        std::function<bool(void)> _not_full_fcn, _not_empty_fcn;
+        boost::function<bool(void)> _not_full_fcn, _not_empty_fcn;
 
         /*!
          * Three part operation to pop an element:
@@ -153,3 +155,5 @@ namespace uhd{ namespace transport{
 
     };
 }} //namespace
+
+#endif /* INCLUDED_UHD_TRANSPORT_BOUNDED_BUFFER_IPP */

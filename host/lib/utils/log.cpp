@@ -11,10 +11,10 @@
 #include <uhd/utils/log_add.hpp>
 #include <uhd/utils/paths.hpp>
 #include <uhd/utils/static.hpp>
-#include <uhd/utils/thread.hpp>
 #include <uhd/version.hpp>
 #include <uhdlib/utils/isatty.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/make_shared.hpp>
 #include <atomic>
 #include <cctype>
 #include <fstream>
@@ -22,7 +22,8 @@
 #include <mutex>
 #include <thread>
 
-namespace pt = boost::posix_time;
+namespace pt                  = boost::posix_time;
+constexpr double READ_TIMEOUT = 0.5; // Waiting time to read from the queue
 
 // Don't make these static const std::string -- we need their lifetime guaranteed!
 #define PURPLE "\033[0;35m" // purple
@@ -39,15 +40,6 @@ namespace pt = boost::posix_time;
  * Helpers
  **********************************************************************/
 namespace {
-
-#ifdef BOOST_MSVC
-constexpr double READ_TIMEOUT = 0.5; // Waiting time to read from the queue
-#endif
-
-constexpr char LOG_THREAD_NAME[]          = "uhd_log";
-constexpr char LOG_THREAD_NAME_FP[]       = "uhd_log_fastpath";
-constexpr char LOG_THREAD_NAME_FP_DUMMY[] = "uhd_log_fp_dummy";
-
 std::string verbosity_color(const uhd::log::severity_level& level)
 {
     static const bool tty = uhd::is_a_tty(2); // is stderr a tty?
@@ -105,8 +97,7 @@ inline std::string path_to_filename(std::string path)
  **********************************************************************/
 void console_log(const uhd::log::logging_info& log_info)
 {
-    std::ostringstream log_buffer;
-    log_buffer
+    std::clog
 #ifdef UHD_LOG_CONSOLE_COLOR
         << verbosity_color(log_info.verbosity)
 #endif
@@ -125,7 +116,6 @@ void console_log(const uhd::log::logging_info& log_info)
         << verbosity_color(uhd::log::off) // This will reset colors
 #endif
         << log_info.message << std::endl;
-    std::clog << log_buffer.str();
 }
 
 /*! Helper class to implement file logging
@@ -222,7 +212,6 @@ public:
         // Launch log message consumer
         _pop_task =
             std::make_shared<std::thread>(std::thread([this]() { this->pop_task(); }));
-        uhd::set_thread_name(_pop_task.get(), LOG_THREAD_NAME);
 
         // Fastpath message consumer
 #ifndef UHD_LOG_FASTPATH_DISABLE
@@ -238,11 +227,9 @@ public:
         if (enable_fastpath) {
             _pop_fastpath_task = std::make_shared<std::thread>(
                 std::thread([this]() { this->pop_fastpath_task(); }));
-            uhd::set_thread_name(_pop_fastpath_task.get(), LOG_THREAD_NAME_FP);
         } else {
             _pop_fastpath_task = std::make_shared<std::thread>(
                 std::thread([this]() { this->pop_fastpath_dummy_task(); }));
-            uhd::set_thread_name(_pop_fastpath_task.get(), LOG_THREAD_NAME_FP_DUMMY);
             _publish_log_msg("Fastpath logging disabled at runtime.");
         }
 #else
@@ -266,7 +253,7 @@ public:
             __FILE__,
             __LINE__,
             "LOGGING",
-            std::this_thread::get_id());
+            boost::this_thread::get_id());
         final_message.message = "";
         push(final_message);
 #    ifndef UHD_LOG_FASTPATH_DISABLE
@@ -482,7 +469,7 @@ private:
             __FILE__,
             __LINE__,
             component,
-            std::this_thread::get_id());
+            boost::this_thread::get_id());
         log_msg.message = msg;
         _log_queue.push_with_timed_wait(log_msg, 0.25);
     }
@@ -506,7 +493,7 @@ uhd::_log::log::log(const uhd::log::severity_level verbosity,
     const std::string& file,
     const unsigned int line,
     const std::string& component,
-    const std::thread::id thread_id)
+    const boost::thread::id thread_id)
     : _log_it(verbosity >= log_rs().global_level)
 {
     if (_log_it) {

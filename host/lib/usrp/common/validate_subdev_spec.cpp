@@ -32,7 +32,7 @@ void uhd::usrp::validate_subdev_spec(property_tree::sptr tree,
         tree->list(str(boost::format("/mboards/%s/%s_dsps") % mb % type)).size();
 
     // sanity checking on the length
-    if (spec.empty())
+    if (spec.size() == 0)
         throw uhd::value_error(
             str(boost::format("Empty %s subdevice specification is not supported.\n")
                 % type));

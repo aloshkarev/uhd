@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_USRP_SUBDEV_SPEC_HPP
+#define INCLUDED_UHD_USRP_SUBDEV_SPEC_HPP
 
 #include <uhd/config.hpp>
 #include <boost/operators.hpp>
@@ -80,3 +81,5 @@ public:
 };
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_UHD_USRP_SUBDEV_SPEC_HPP */

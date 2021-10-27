@@ -5,7 +5,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#pragma once
+#ifndef INCLUDED_UHD_TYPES_USRP_INFO_H
+#define INCLUDED_UHD_TYPES_USRP_INFO_H
 
 #include <uhd/config.h>
 #include <uhd/error.h>
@@ -79,3 +80,5 @@ UHD_API uhd_error uhd_usrp_tx_info_free(uhd_usrp_tx_info_t *tx_info);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* INCLUDED_UHD_TYPES_USRP_INFO_H */

@@ -16,5 +16,10 @@ else()
     math(EXPR UHD_VERSION_ADDED "1000000 * ${UHD_VERSION_MAJOR} + 10000 * ${UHD_VERSION_API} + 100 * ${UHD_VERSION_ABI} + ${UHD_VERSION_PATCH}")
 endif(UHD_VERSION_DEVEL)
 
+## RFNoC
+if(ENABLE_RFNOC)
+    add_definitions(-DUHD_RFNOC_ENABLED)
+endif(ENABLE_RFNOC)
+
 ## make sure the code knows about config.h
 add_definitions(-DHAVE_CONFIG_H)

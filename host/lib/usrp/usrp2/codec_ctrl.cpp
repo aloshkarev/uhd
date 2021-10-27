@@ -96,7 +96,7 @@ public:
         }
     }
 
-    ~usrp2_codec_ctrl_impl(void) override
+    ~usrp2_codec_ctrl_impl(void)
     {
         UHD_SAFE_CALL(
             // power-down dac
@@ -124,7 +124,7 @@ public:
             })
     }
 
-    void set_tx_mod_mode(int mod_mode) override
+    void set_tx_mod_mode(int mod_mode)
     {
         // set the sign of the frequency shift
         _ad9777_regs.modulation_form = (mod_mode > 0)
@@ -153,7 +153,7 @@ public:
         this->send_ad9777_reg(0x01); // set the register
     }
 
-    void set_rx_digital_gain(double gain) override
+    void set_rx_digital_gain(double gain)
     { // fine digital gain
         switch (_iface->get_rev()) {
             case usrp2_iface::USRP_N200:
@@ -169,7 +169,7 @@ public:
         }
     }
 
-    void set_rx_digital_fine_gain(double gain) override
+    void set_rx_digital_fine_gain(double gain)
     { // gain correction
         switch (_iface->get_rev()) {
             case usrp2_iface::USRP_N200:
@@ -185,7 +185,7 @@ public:
         }
     }
 
-    void set_rx_analog_gain(bool /*gain*/) override
+    void set_rx_analog_gain(bool /*gain*/)
     { // turns on/off analog 3.5dB preamp
         switch (_iface->get_rev()) {
             case usrp2_iface::USRP_N200:
@@ -203,7 +203,7 @@ public:
         }
     }
 
-    size_t get_tx_interpolation() const override
+    size_t get_tx_interpolation() const
     {
         return 4;
     }

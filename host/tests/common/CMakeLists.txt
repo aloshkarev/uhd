@@ -8,6 +8,8 @@
 # Build uhd_test static lib
 ########################################################################
 include_directories("${UHD_SOURCE_DIR}/lib/include")
-add_library(uhd_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/mock_zero_copy.cpp
+add_library(uhd_test ${CMAKE_CURRENT_SOURCE_DIR}/mock_ctrl_iface_impl.cpp
+                     ${CMAKE_CURRENT_SOURCE_DIR}/mock_zero_copy.cpp
+                     ${UHD_SOURCE_DIR}/lib/rfnoc/graph_impl.cpp
+                     ${UHD_SOURCE_DIR}/lib/rfnoc/async_msg_handler.cpp
 )

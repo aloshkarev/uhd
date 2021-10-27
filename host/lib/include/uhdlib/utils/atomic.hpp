@@ -5,13 +5,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_ATOMIC_HPP
+#define INCLUDED_UHD_UTILS_ATOMIC_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/time_spec.hpp>
+#include <uhdlib/utils/system_time.hpp>
 #include <boost/thread/thread.hpp>
 #include <atomic>
-#include <chrono>
 
 namespace uhd {
 
@@ -29,10 +30,9 @@ UHD_INLINE bool spin_wait_with_timeout(
 {
     if (cond == value)
         return true;
-    const auto exit_time = std::chrono::high_resolution_clock::now()
-                           + std::chrono::microseconds(int64_t(timeout * 1e6));
+    const time_spec_t exit_time = uhd::get_system_time() + time_spec_t(timeout);
     while (cond != value) {
-        if (std::chrono::high_resolution_clock::now() > exit_time) {
+        if (uhd::get_system_time() > exit_time) {
             return false;
         }
         boost::this_thread::interruption_point();
@@ -73,3 +73,5 @@ private:
 };
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_UTILS_ATOMIC_HPP */

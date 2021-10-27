@@ -41,7 +41,8 @@
 // [End of GSL license]
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef INCLUDED_UHDLIB_UTILS_NARROW_HPP
+#define INCLUDED_UHDLIB_UTILS_NARROW_HPP
 
 #include <uhd/exception.hpp>
 #include <utility>
@@ -95,3 +96,5 @@ inline T narrow(U u)
 #if defined(_MSC_VER)
 #    pragma warning(pop)
 #endif // _MSC_VER
+
+#endif /* INCLUDED_UHDLIB_UTILS_NARROW_HPP */

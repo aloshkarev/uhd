@@ -30,7 +30,7 @@ operating systems.
 
 * Linux (Fedora and Ubuntu)
 * Mac OS X (Intel)
-* Windows 10
+* Windows 7
 
 Other operating systems will most likely work, too, but are not officially
 supported.
@@ -43,7 +43,7 @@ third-party applications. Some common toolkits / frameworks are:
 * [GNU Radio](http://gnuradio.org/)
 * [NI LabVIEW](http://www.ni.com/download/ni-usrp-1.3/4711/en/)
 * [MathWorks Simulink](http://www.mathworks.com/discovery/sdr/usrp.html)
-* [REDHAWK](https://redhawksdr.org/)
+* [REDHAWK](http://redhawksdr.github.io/Documentation/)
 * [OpenBTS GSM](http://openbts.org)
 * [Osmocom GSM](http://osmocom.org)
 * [Amarisoft LTE](http://www.amarisoft.com/products-lte-ue-ots-sdr-pcie)
@@ -64,9 +64,17 @@ __firmware/__
 
 The source code for all microprocessors in USRP hardware.
 
-__fpga/__
+__fpga-src/__
 
-The source code for the UHD FPGA images.
+The source code for the UHD FPGA images. Note this is a git submodule,
+if you are cloning the repository and want to modify the FPGA code,
+you will need to run 'git clone --recursive' to automatically
+populate this directory. Alternatively, you can run 'git submodule init'
+followed by 'git submodule update' to populate it after cloning the
+repository without '--recursive'.
+
+Note that this subdirectory is very large, and not necessary for
+building applications that link against UHD.
 
 __images/__
 

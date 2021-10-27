@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_USRP_COMMON_ASYNC_PACKET_HANDLER_HPP
+#define INCLUDED_LIBUHD_USRP_COMMON_ASYNC_PACKET_HANDLER_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/transport/vrt_if_packet.hpp>
@@ -60,3 +61,5 @@ UHD_INLINE void standard_async_msg_prints(const async_metadata_t& metadata)
 
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_LIBUHD_USRP_COMMON_ASYNC_PACKET_HANDLER_HPP */

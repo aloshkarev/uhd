@@ -15,9 +15,9 @@
 #include <boost/format.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/weak_ptr.hpp>
 #include <future>
-#include <memory>
-#include <tuple>
 
 using namespace uhd;
 
@@ -60,7 +60,8 @@ static size_t hash_device_addr(const device_addr_t& dev_addr)
 /***********************************************************************
  * Registration
  **********************************************************************/
-typedef std::tuple<device::find_t, device::make_t, device::device_filter_t> dev_fcn_reg_t;
+typedef boost::tuple<device::find_t, device::make_t, device::device_filter_t>
+    dev_fcn_reg_t;
 
 // instantiate the device function registry container
 UHD_SINGLETON_FCN(std::vector<dev_fcn_reg_t>, get_dev_fcn_regs)
@@ -87,9 +88,9 @@ device_addrs_t device::find(const device_addr_t& hint, device_filter_t filter)
     device_addrs_t device_addrs;
     std::vector<std::future<device_addrs_t>> find_tasks;
     for (const auto& fcn : get_dev_fcn_regs()) {
-        if (filter == ANY or std::get<2>(fcn) == filter) {
+        if (filter == ANY or fcn.get<2>() == filter) {
             find_tasks.emplace_back(std::async(
-                std::launch::async, [fcn, hint]() { return std::get<0>(fcn)(hint); }));
+                std::launch::async, [fcn, hint]() { return fcn.get<0>()(hint); }));
         }
     }
     for (auto& find_task : find_tasks) {
@@ -112,16 +113,17 @@ device::sptr device::make(const device_addr_t& hint, device_filter_t filter, siz
 {
     boost::mutex::scoped_lock lock(_device_mutex);
 
-    typedef std::tuple<device_addr_t, make_t> dev_addr_make_t;
+    typedef boost::tuple<device_addr_t, make_t> dev_addr_make_t;
     std::vector<dev_addr_make_t> dev_addr_makers;
+    device_addr_t hint_with_prefs = prefs::get_usrp_args(hint);
+    UHD_LOGGER_DEBUG("UHD") << "Looking for device with hint: " << hint_with_prefs.to_string();
 
     for (const dev_fcn_reg_t& fcn : get_dev_fcn_regs()) {
         try {
-            if (filter == ANY or std::get<2>(fcn) == filter) {
-                for (device_addr_t dev_addr : std::get<0>(fcn)(hint)) {
+            if (filter == ANY or fcn.get<2>() == filter) {
+                for (device_addr_t dev_addr : fcn.get<0>()(hint_with_prefs)) {
                     // append the discovered address and its factory function
-                    dev_addr_makers.push_back(
-                        dev_addr_make_t(dev_addr, std::get<1>(fcn)));
+                    dev_addr_makers.push_back(dev_addr_make_t(dev_addr, fcn.get<1>()));
                 }
             }
         } catch (const std::exception& e) {
@@ -130,7 +132,7 @@ device::sptr device::make(const device_addr_t& hint, device_filter_t filter, siz
     }
 
     // check that we found any devices
-    if (dev_addr_makers.empty()) {
+    if (dev_addr_makers.size() == 0) {
         throw uhd::key_error(
             str(boost::format("No devices found for ----->\n%s") % hint.to_pp_string()));
     }
@@ -144,8 +146,8 @@ device::sptr device::make(const device_addr_t& hint, device_filter_t filter, siz
     // create a unique hash for the device address
     device_addr_t dev_addr;
     make_t maker;
-    std::tie(dev_addr, maker) = dev_addr_makers.at(which);
-    size_t dev_hash           = hash_device_addr(dev_addr);
+    boost::tie(dev_addr, maker) = dev_addr_makers.at(which);
+    size_t dev_hash             = hash_device_addr(dev_addr);
     UHD_LOGGER_TRACE("UHD") << boost::format("Device hash: %u") % dev_hash;
 
     // copy keys that were in hint but not in dev_addr
@@ -156,7 +158,7 @@ device::sptr device::make(const device_addr_t& hint, device_filter_t filter, siz
     }
 
     // map device address hash to created devices
-    static uhd::dict<size_t, std::weak_ptr<device>> hash_to_device;
+    static uhd::dict<size_t, boost::weak_ptr<device>> hash_to_device;
 
     // try to find an existing device
     if (hash_to_device.has_key(dev_hash) and not hash_to_device[dev_hash].expired()) {

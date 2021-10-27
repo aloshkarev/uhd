@@ -36,8 +36,7 @@ public:
     { /* NOP */
     }
 
-    void set_pin_ctrl(
-        const unit_t unit, const uint16_t value, const uint16_t mask) override
+    void set_pin_ctrl(const unit_t unit, const uint16_t value, const uint16_t mask)
     {
         if (unit == dboard_iface::UNIT_BOTH)
             throw uhd::runtime_error("UNIT_BOTH not supported in gpio_core_200");
@@ -45,17 +44,15 @@ public:
         update(); // full update
     }
 
-    uint16_t get_pin_ctrl(unit_t unit) override
+    uint16_t get_pin_ctrl(unit_t unit)
     {
         if (unit == dboard_iface::UNIT_BOTH)
             throw uhd::runtime_error("UNIT_BOTH not supported in gpio_core_200");
         return _pin_ctrl[unit];
     }
 
-    void set_atr_reg(const unit_t unit,
-        const atr_reg_t atr,
-        const uint16_t value,
-        const uint16_t mask) override
+    void set_atr_reg(
+        const unit_t unit, const atr_reg_t atr, const uint16_t value, const uint16_t mask)
     {
         if (unit == dboard_iface::UNIT_BOTH)
             throw uhd::runtime_error("UNIT_BOTH not supported in gpio_core_200");
@@ -68,15 +65,14 @@ public:
             update(atr);
     }
 
-    uint16_t get_atr_reg(unit_t unit, atr_reg_t reg) override
+    uint16_t get_atr_reg(unit_t unit, atr_reg_t reg)
     {
         if (unit == dboard_iface::UNIT_BOTH)
             throw uhd::runtime_error("UNIT_BOTH not supported in gpio_core_200");
         return _atr_regs[unit][reg];
     }
 
-    void set_gpio_ddr(
-        const unit_t unit, const uint16_t value, const uint16_t mask) override
+    void set_gpio_ddr(const unit_t unit, const uint16_t value, const uint16_t mask)
     {
         if (unit == dboard_iface::UNIT_BOTH)
             throw uhd::runtime_error("UNIT_BOTH not supported in gpio_core_200");
@@ -88,15 +84,14 @@ public:
                       << shift_by_unit(dboard_iface::UNIT_TX)));
     }
 
-    uint16_t get_gpio_ddr(unit_t unit) override
+    uint16_t get_gpio_ddr(unit_t unit)
     {
         if (unit == dboard_iface::UNIT_BOTH)
             throw uhd::runtime_error("UNIT_BOTH not supported in gpio_core_200");
         return _gpio_ddr[unit];
     }
 
-    void set_gpio_out(
-        const unit_t unit, const uint16_t value, const uint16_t mask) override
+    void set_gpio_out(const unit_t unit, const uint16_t value, const uint16_t mask)
     {
         if (unit == dboard_iface::UNIT_BOTH)
             throw uhd::runtime_error("UNIT_BOTH not supported in gpio_core_200");
@@ -104,14 +99,14 @@ public:
         this->update(); // full update
     }
 
-    uint16_t get_gpio_out(unit_t unit) override
+    uint16_t get_gpio_out(unit_t unit)
     {
         if (unit == dboard_iface::UNIT_BOTH)
             throw uhd::runtime_error("UNIT_BOTH not supported in gpio_core_200");
         return _gpio_out[unit];
     }
 
-    uint16_t read_gpio(const unit_t unit) override
+    uint16_t read_gpio(const unit_t unit)
     {
         if (unit == dboard_iface::UNIT_BOTH)
             throw uhd::runtime_error("UNIT_BOTH not supported in gpio_core_200");
@@ -202,13 +197,13 @@ public:
         set_ddr_reg();
     }
 
-    void set_ddr_reg() override
+    void set_ddr_reg()
     {
         _iface->poke32(REG_GPIO_DDR, 0xffffffff);
     }
 
 
-    void set_atr_reg(const atr_reg_t atr, const uint32_t value) override
+    void set_atr_reg(const atr_reg_t atr, const uint32_t value)
     {
         if (atr == gpio_atr::ATR_REG_IDLE)
             _iface->poke32(REG_GPIO_IDLE, value);
@@ -222,7 +217,7 @@ public:
             UHD_THROW_INVALID_CODE_PATH();
     }
 
-    void set_all_regs(const uint32_t value) override
+    void set_all_regs(const uint32_t value)
     {
         set_atr_reg(gpio_atr::ATR_REG_IDLE, value);
         set_atr_reg(gpio_atr::ATR_REG_TX_ONLY, value);

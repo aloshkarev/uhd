@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_USRP_GPIO_CORE_3000_HPP
+#define INCLUDED_LIBUHD_USRP_GPIO_CORE_3000_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/wb_iface.hpp>
@@ -13,18 +14,18 @@
 #include <uhd/usrp/gpio_defs.hpp>
 #include <uhd/utils/noncopyable.hpp>
 #include <uhdlib/usrp/gpio_defs.hpp>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace uhd { namespace usrp { namespace gpio_atr {
 
 class gpio_atr_3000 : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<gpio_atr_3000> sptr;
+    typedef boost::shared_ptr<gpio_atr_3000> sptr;
 
     static const uint32_t MASK_SET_ALL = 0xFFFFFFFF;
 
-    virtual ~gpio_atr_3000(void) {}
+    virtual ~gpio_atr_3000(void){};
 
     /*!
      * Create a read-write GPIO ATR interface object
@@ -32,23 +33,19 @@ public:
      * \param iface register iface to GPIO ATR registers
      * \param base base settings offset for GPIO ATR registers
      * \param rb_addr readback offset for GPIO ATR registers
-     * \param reg_offset Delta between the register addresses
      */
     static sptr make(uhd::wb_iface::sptr iface,
         const uhd::wb_iface::wb_addr_type base,
-        const uhd::wb_iface::wb_addr_type rb_addr,
-        const size_t reg_offset = 4);
+        const uhd::wb_iface::wb_addr_type rb_addr);
 
     /*!
      * Create a write-only GPIO ATR interface object
      *
      * \param iface register iface to GPIO ATR registers
      * \param base base settings offset for GPIO ATR registers
-     * \param reg_offset Delta between the register addresses
      */
-    static sptr make_write_only(uhd::wb_iface::sptr iface,
-        const uhd::wb_iface::wb_addr_type base,
-        const size_t reg_offset = 4);
+    static sptr make_write_only(
+        uhd::wb_iface::sptr iface, const uhd::wb_iface::wb_addr_type base);
 
     /*!
      * Select the ATR mode for all bits in the mask
@@ -96,16 +93,6 @@ public:
     virtual uint32_t read_gpio() = 0;
 
     /*!
-     * Get a GPIO attribute
-     * This will likely returned a cached value, and not read the state from the physical
-     * GPIO controller.
-     *
-     * \param attr the attribute to read
-     * \return the current value of that attribute
-     */
-    virtual uint32_t get_attr_reg(const gpio_attr_t attr) = 0;
-
-    /*!
      * Set a GPIO attribute
      *
      * \param attr the attribute to set
@@ -117,11 +104,11 @@ public:
 class db_gpio_atr_3000
 {
 public:
-    typedef std::shared_ptr<db_gpio_atr_3000> sptr;
+    typedef boost::shared_ptr<db_gpio_atr_3000> sptr;
 
     typedef uhd::usrp::dboard_iface::unit_t db_unit_t;
 
-    virtual ~db_gpio_atr_3000(void) {}
+    virtual ~db_gpio_atr_3000(void){};
 
     /*!
      * Create a read-write GPIO ATR interface object for a daughterboard connector
@@ -129,12 +116,10 @@ public:
      * \param iface register iface to GPIO ATR registers
      * \param base base settings offset for GPIO ATR registers
      * \param rb_addr readback offset for GPIO ATR registers
-     * \param reg_offset Delta between the register addresses
      */
     static sptr make(uhd::wb_iface::sptr iface,
         const uhd::wb_iface::wb_addr_type base,
-        const uhd::wb_iface::wb_addr_type rb_addr,
-        const size_t reg_offset = 4);
+        const uhd::wb_iface::wb_addr_type rb_addr);
 
     /*!
      * Configure the GPIO mode for all pins in the daughterboard connector
@@ -199,3 +184,5 @@ public:
 };
 
 }}} // namespace uhd::usrp::gpio_atr
+
+#endif /* INCLUDED_LIBUHD_USRP_GPIO_CORE_3000_HPP */

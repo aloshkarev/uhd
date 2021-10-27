@@ -39,7 +39,7 @@ public:
         __flush();
     }
 
-    void poke32(const wb_addr_type addr, const uint32_t data) override
+    void poke32(const wb_addr_type addr, const uint32_t data)
     {
         for (size_t i = 1; i <= num_retries; i++) {
             boost::mutex::scoped_lock lock(reg_access);
@@ -57,7 +57,7 @@ public:
         }
     }
 
-    uint32_t peek32(const wb_addr_type addr) override
+    uint32_t peek32(const wb_addr_type addr)
     {
         for (size_t i = 1; i <= num_retries; i++) {
             boost::mutex::scoped_lock lock(reg_access);
@@ -105,7 +105,7 @@ public:
     }
 
 protected:
-    void __poke32(const wb_addr_type addr, const uint32_t data) override
+    virtual void __poke32(const wb_addr_type addr, const uint32_t data)
     {
         // load request struct
         x300_fw_comms_t request = x300_fw_comms_t();
@@ -136,7 +136,7 @@ protected:
         UHD_ASSERT_THROW(reply.data == request.data);
     }
 
-    uint32_t __peek32(const wb_addr_type addr) override
+    virtual uint32_t __peek32(const wb_addr_type addr)
     {
         // load request struct
         x300_fw_comms_t request = x300_fw_comms_t();
@@ -169,14 +169,14 @@ protected:
         return uhd::ntohx<uint32_t>(reply.data);
     }
 
-    void __flush(void) override
+    virtual void __flush(void)
     {
         char buff[X300_FW_COMMS_MTU] = {};
         while (udp->recv(boost::asio::buffer(buff), 0.0)) {
         } // flush
     }
 
-    std::string __loc_info(void) override
+    virtual std::string __loc_info(void)
     {
         return udp->get_send_addr();
     }
@@ -233,7 +233,7 @@ public:
     }
 
 protected:
-    void __poke32(const wb_addr_type addr, const uint32_t data) override
+    virtual void __poke32(const wb_addr_type addr, const uint32_t data)
     {
         nirio_status status = 0;
         uint32_t reg_data   = 0xffffffff;
@@ -261,7 +261,7 @@ protected:
             throw uhd::io_error("x300 fw poke32 - operation timed out");
     }
 
-    uint32_t __peek32(const wb_addr_type addr) override
+    virtual uint32_t __peek32(const wb_addr_type addr)
     {
         nirio_status status = 0;
         uint32_t reg_data   = 0xffffffff;
@@ -293,12 +293,12 @@ protected:
         return reg_data;
     }
 
-    void __flush(void) override
+    virtual void __flush(void)
     {
         __peek32(0);
     }
 
-    std::string __loc_info(void) override
+    virtual std::string __loc_info(void)
     {
         return std::to_string(_drv_proxy->get_interface_num());
     }

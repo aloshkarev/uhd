@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_TYPES_MAC_ADDR_HPP
+#define INCLUDED_UHD_TYPES_MAC_ADDR_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/serial.hpp>
@@ -52,3 +53,5 @@ private:
 };
 
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_TYPES_MAC_ADDR_HPP */

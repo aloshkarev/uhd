@@ -6,6 +6,8 @@
 */
 
 
+
+
 #pragma once
 
 #include "pybind11.h"
@@ -47,8 +49,8 @@
 #  define PYBIND11_HAS_VARIANT 1
 #endif
 
-PYBIND11_NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
-PYBIND11_NAMESPACE_BEGIN(detail)
+NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
+NAMESPACE_BEGIN(detail)
 
 
 
@@ -265,9 +267,7 @@ template<typename T> struct optional_caster {
     static handle cast(T_ &&src, return_value_policy policy, handle parent) {
         if (!src)
             return none().inc_ref();
-        if (!std::is_lvalue_reference<T>::value) {
-            policy = return_value_policy_override<T>::policy(policy);
-        }
+        policy = return_value_policy_override<typename T::value_type>::policy(policy);
         return value_conv::cast(*std::forward<T_>(src), policy, parent);
     }
 
@@ -288,7 +288,7 @@ template<typename T> struct optional_caster {
     PYBIND11_TYPE_CASTER(T, _("Optional[") + value_conv::name + _("]"));
 };
 
-#if defined(PYBIND11_HAS_OPTIONAL)
+#if PYBIND11_HAS_OPTIONAL
 template<typename T> struct type_caster<std::optional<T>>
     : public optional_caster<std::optional<T>> {};
 
@@ -296,7 +296,7 @@ template<> struct type_caster<std::nullopt_t>
     : public void_caster<std::nullopt_t> {};
 #endif
 
-#if defined(PYBIND11_HAS_EXP_OPTIONAL)
+#if PYBIND11_HAS_EXP_OPTIONAL
 template<typename T> struct type_caster<std::experimental::optional<T>>
     : public optional_caster<std::experimental::optional<T>> {};
 
@@ -368,19 +368,19 @@ struct variant_caster<V<Ts...>> {
     PYBIND11_TYPE_CASTER(Type, _("Union[") + detail::concat(make_caster<Ts>::name...) + _("]"));
 };
 
-#if defined(PYBIND11_HAS_VARIANT)
+#if PYBIND11_HAS_VARIANT
 template <typename... Ts>
 struct type_caster<std::variant<Ts...>> : variant_caster<std::variant<Ts...>> { };
 #endif
 
-PYBIND11_NAMESPACE_END(detail)
+NAMESPACE_END(detail)
 
 inline std::ostream &operator<<(std::ostream &os, const handle &obj) {
     os << (std::string) str(obj);
     return os;
 }
 
-PYBIND11_NAMESPACE_END(PYBIND11_NAMESPACE)
+NAMESPACE_END(PYBIND11_NAMESPACE)
 
 #if defined(_MSC_VER)
 #pragma warning(pop)

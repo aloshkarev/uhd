@@ -5,13 +5,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_CONVERT_HPP
+#define INCLUDED_UHD_CONVERT_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/types/ref_vector.hpp>
+#include <boost/function.hpp>
 #include <boost/operators.hpp>
-#include <functional>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 #include <string>
 
 namespace uhd { namespace convert {
@@ -20,7 +21,7 @@ namespace uhd { namespace convert {
 class converter
 {
 public:
-    typedef std::shared_ptr<converter> sptr;
+    typedef boost::shared_ptr<converter> sptr;
     typedef uhd::ref_vector<void*> output_type;
     typedef uhd::ref_vector<const void*> input_type;
 
@@ -50,7 +51,7 @@ private:
 };
 
 //! Conversion factory function typedef
-typedef std::function<converter::sptr(void)> function_type;
+typedef boost::function<converter::sptr(void)> function_type;
 
 //! Priority of conversion routines
 typedef int priority_type;
@@ -100,3 +101,5 @@ UHD_API void register_bytes_per_item(const std::string& format, const size_t siz
 UHD_API size_t get_bytes_per_item(const std::string& format);
 
 }} // namespace uhd::convert
+
+#endif /* INCLUDED_UHD_CONVERT_HPP */

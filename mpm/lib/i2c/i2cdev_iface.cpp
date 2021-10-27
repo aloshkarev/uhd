@@ -64,29 +64,23 @@ public:
         return ret;
     }
 
-    std::vector<uint8_t> transfer(
-        std::vector<uint8_t>& tx, size_t num_rx_bytes, bool do_close)
+    int transfer(std::vector<uint8_t>* tx, std::vector<uint8_t>* rx, bool do_close)
     {
         uint8_t *tx_data = NULL, *rx_data = NULL;
         size_t tx_len = 0, rx_len = 0;
-        std::vector<uint8_t> rx(num_rx_bytes);
 
-        if (!tx.empty()) {
-            tx_data = tx.data();
-            tx_len  = tx.size();
+        if (tx) {
+            tx_data = tx->data();
+            tx_len  = tx->size();
         }
 
-        if (num_rx_bytes) {
-            rx_data = rx.data();
-            rx_len  = rx.size();
+        if (rx) {
+            rx_data = rx->data();
+            rx_len  = rx->size();
         }
+        int ret = transfer(tx_data, tx_len, rx_data, rx_len, do_close);
 
-        const int err = transfer(tx_data, tx_len, rx_data, num_rx_bytes, do_close);
-        if (err) {
-            throw mpm::runtime_error("I2C Transaction failed!");
-        }
-
-        return rx;
+        return ret;
     }
 
 private:

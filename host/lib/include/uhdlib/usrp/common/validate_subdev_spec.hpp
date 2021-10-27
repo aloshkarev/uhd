@@ -5,7 +5,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_LIBUHD_USRP_COMMON_VALIDATE_SUBDEV_SPEC_HPP
+#define INCLUDED_LIBUHD_USRP_COMMON_VALIDATE_SUBDEV_SPEC_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/property_tree.hpp>
@@ -21,3 +22,5 @@ void validate_subdev_spec(property_tree::sptr tree,
     const std::string& mb = "0");
 
 }} // namespace uhd::usrp
+
+#endif /* INCLUDED_LIBUHD_USRP_COMMON_VALIDATE_SUBDEV_SPEC_HPP */

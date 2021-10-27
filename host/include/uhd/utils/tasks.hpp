@@ -1,27 +1,27 @@
 //
 // Copyright 2011-2012 Ettus Research LLC
-// Copyright 2017 Ettus Research (National Instruments Corp.)
 // Copyright 2018 Ettus Research, a National Instruments Company
-// Copyright 2019 Ettus Research, a National Instruments Brand
+// Copyright 2017 Ettus Research (National Instruments Corp.)
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHD_UTILS_TASKS_HPP
+#define INCLUDED_UHD_UTILS_TASKS_HPP
 
 #include <uhd/config.hpp>
 #include <uhd/utils/noncopyable.hpp>
-#include <functional>
-#include <memory>
-#include <string>
+#include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 
 namespace uhd {
 
 class UHD_API task : uhd::noncopyable
 {
 public:
-    typedef std::shared_ptr<task> sptr;
-    typedef std::function<void(void)> task_fcn_type;
+    typedef boost::shared_ptr<task> sptr;
+    typedef boost::function<void(void)> task_fcn_type;
 
     /*!
      * Create a new task object with function callback.
@@ -38,3 +38,5 @@ public:
     static sptr make(const task_fcn_type& task_fcn, const std::string& name = "");
 };
 } // namespace uhd
+
+#endif /* INCLUDED_UHD_UTILS_TASKS_HPP */

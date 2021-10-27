@@ -4,10 +4,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#pragma once
+#ifndef INCLUDED_UHDLIB_UTILS_ISATTY_HPP
+#define INCLUDED_UHDLIB_UTILS_ISATTY_HPP
 
 #include <uhd/config.hpp>
-#include <uhdlib/utils/narrow.hpp>
 
 namespace uhd {
 
@@ -23,7 +23,7 @@ namespace uhd {
  */
 bool is_a_tty(const int fd)
 {
-    return uhd::narrow_cast<bool>(_isatty(fd));
+    return _isatty(fd);
 }
 
 #elif _POSIX_C_SOURCE >= _200112L
@@ -51,3 +51,5 @@ bool is_a_tty(const int fd)
 #endif
 
 } /* namespace uhd */
+
+#endif /* INCLUDED_UHDLIB_UTILS_ISATTY_HPP */
