@@ -12,7 +12,6 @@ import copy
 from time import sleep
 from os import path
 from collections import namedtuple
-from pyudev import DeviceNotFoundByNameError
 from usrp_mpm import lib # Pulls in everything from C++-land
 from usrp_mpm import tlv_eeprom
 from usrp_mpm.cores import WhiteRabbitRegsControl
@@ -162,7 +161,7 @@ class x4xx(ZynqComponents, PeriphManagerBase):
     mboard_eeprom_max_len = 256
     mboard_eeprom_magic = eeprom_magic
     mboard_info = {"type": "x4xx"}
-    mboard_max_rev = 6  # RevF
+    mboard_max_rev = 7  # RevG
     max_num_dboards = 2
     mboard_sensor_callback_map = {
         # List of motherboard sensors that are always available. There are also
@@ -214,7 +213,7 @@ class x4xx(ZynqComponents, PeriphManagerBase):
             'reset': False,
         },
     }
-    discoverable_features = ["ref_clk_calibration", "time_export", "trig_io_mode"]
+    discoverable_features = ["ref_clk_calibration", "time_export", "trig_io_mode", "gpio_power"]
     #
     # End of overridables from PeriphManagerBase
     ###########################################################################
@@ -302,6 +301,9 @@ class x4xx(ZynqComponents, PeriphManagerBase):
         try:
             self._init_peripherals(args)
             self.init_dboards(args)
+            # We need to init dio_control separately from peripherals
+            # since it needs information about available dboards
+            self._init_dio_control(args)
             self._clk_mgr.set_dboard_reset_cb(
                 lambda enable: [db.reset_clock(enable) for db in self.dboards])
         except Exception as ex:
@@ -535,13 +537,6 @@ class x4xx(ZynqComponents, PeriphManagerBase):
         # is possible to always enable the iPass cable present forwarding.
         self.ctrlport_regs.enable_cable_present_forwarding(True)
 
-        # Init DIO
-        if self._check_compat_aux_board(DIOAUX_EEPROM, DIOAUX_PID):
-            self.dio_control = DioControl(self.mboard_regs_control,
-                                          self.cpld_control, self.log)
-            # add dio_control public methods to MPM API
-            self._add_public_methods(self.dio_control, "dio")
-
         # Init QSFP modules
         for idx, config in enumerate(X400_QSFP_I2C_CONFIGS):
             attr = QSFPModule(
@@ -566,6 +561,18 @@ class x4xx(ZynqComponents, PeriphManagerBase):
         self._status_monitor_thread.start()
         # Init complete.
         self.log.debug("Device info: {}".format(self.device_info))
+
+    def _init_dio_control(self, _):
+        """
+        Turn on gpio peripherals. This may throw an error on failure, so make
+        sure to catch it.
+        """
+        if self._check_compat_aux_board(DIOAUX_EEPROM, DIOAUX_PID):
+            self.dio_control = DioControl(self.mboard_regs_control,
+                                          self.cpld_control, self.log,
+                                          self.dboards)
+            # add dio_control public methods to MPM API
+            self._add_public_methods(self.dio_control, "dio")
 
     def _check_compat_aux_board(self, name, pid):
         """
@@ -1018,6 +1025,47 @@ class x4xx(ZynqComponents, PeriphManagerBase):
             }
         ]
 
+    ###########################################################################
+    # GPIO API
+    ###########################################################################
+    def get_gpio_banks(self):
+        """
+        Returns a list of GPIO banks over which MPM has any control
+        """
+        if self.dio_control is None:
+            return []
+        return self.dio_control.get_gpio_banks()
+
+    def get_gpio_srcs(self, bank: str):
+        """
+        Return a list of valid GPIO sources for a given bank
+        """
+        if self.dio_control is None:
+            return []
+        return self.dio_control.get_gpio_srcs(bank)
+
+    def get_gpio_src(self, bank: str):
+        """
+        Return the currently selected GPIO source for a given bank. The return
+        value is a list of strings. The length of the vector is identical to
+        the number of controllable GPIO pins on this bank. CUSTOM is for
+        miscellaneous pin source, and USER_APP is for LabView pin source.
+        """
+        if self.dio_control is None:
+            raise RuntimeError("Unable to query GPIO source: No valid DIO board installed.")
+        return self.dio_control.get_gpio_src(bank)
+
+    def set_gpio_src(self, bank: str, *src):
+        """
+        Set the GPIO source for a given bank.
+        src input is big-endian
+        Usage:
+        > set_gpio_src <bank> <srcs>
+        > set_gpio_src GPIO0 PS DB1_RF1 PS PS MPM PS PS PS MPM USER_APP PS
+        """
+        if self.dio_control is None:
+            raise RuntimeError("Unable to set GPIO source: No valid DIO board installed.")
+        self.dio_control.set_gpio_src(bank, *src)
 
     ###########################################################################
     # Utility for validating RPU core number
