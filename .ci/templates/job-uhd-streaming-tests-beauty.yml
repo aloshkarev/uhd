@@ -5,6 +5,9 @@ parameters:
     - ubuntu2004
 - name: uhdSrcDir
   type: string
+- name: uhdArtifactSource
+  type: string
+  default: current
 - name: testLength
   type: string
 
@@ -16,10 +19,29 @@ jobs:
     testLength: '${{ parameters.testLength }}'
     toolset: 'make'
     uhdSrcDir: '${{ parameters.uhdSrcDir }}'
+    uhdArtifactSource: ${{ parameters.uhdArtifactSource }}
+    xilinxLocation: /opt/Xilinx/Vivado_Lab/2019.1
     dutMatrix:
-      beauty-N320-0 XG:
-        dutName: 'beauty-N320-0'
-        dutType: 'N320'
+      # beauty-N320-0 XG:
+      #   dutName: 'beauty-N320-0'
+      #   dutType: 'N320'
+      #   dutAddr: '192.168.10.2'
+      #   dutSecondAddr: '192.168.20.2'
+      #   dutMgmtAddr: '10.0.57.13'
+      #   dutFPGA:'XG'
+      # beauty-X410-0 X4_200:
+      #   dutName: 'beauty-X410-0'
+      #   dutType: 'x4xx'
+      #   dutAddr: '192.168.10.2'
+      #   dutSecondAddr: '192.168.20.2'
+      #   dutMgmtAddr: '10.0.57.29'
+      #   dutFPGA:'X4_200'
+      beauty-X410-0 CG_400:
+        dutName: 'beauty-X410-0'
+        dutType: 'x4xx'
         dutAddr: '192.168.10.2'
         dutSecondAddr: '192.168.20.2'
-        dutMgmtAddr: '10.0.57.13'
+        dutMgmtAddr: '10.0.57.29'
+        dutFPGA: 'CG_400'
+        dutEmbeddedImagesArtifact: 'x4xx-images'
+        uartSerial: '2516351E2C9A'

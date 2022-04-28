@@ -57,6 +57,38 @@ DEVICE_DEFAULTTARGET_MAP = {
     'n320': 'N320_XG',
 }
 
+# List of blocks that have been replaced (old name : new name)
+deprecated_block_yml_map = {
+    "radio_1x64.yml"        : "radio.yml",
+    "radio_2x64.yml"        : "radio.yml",
+    "axi_ram_fifo_2x64.yml" : "axi_ram_fifo.yml",
+    "axi_ram_fifo_4x64.yml" : "axi_ram_fifo.yml",
+}
+
+# List of port names that have been replaced (old name : new name)
+deprecated_port_name_map = {
+    "x300_radio"     : "radio",
+    "radio_iface"    : "radio",
+    "x300_radio0"    : "radio0",
+    "x300_radio1"    : "radio1",
+    "radio_ch0"      : "radio0",
+    "radio_ch1"      : "radio1",
+    "ctrl_port"      : "ctrlport",
+    "ctrlport_radio" : "ctrlport",
+    "timekeeper"     : "time",
+    "time_keeper"    : "time",
+}
+
+# List of IO signature types that have been replaced (old name : new name)
+deprecated_port_type_map = {
+    "ctrl_port"     : "ctrlport",
+    "time_keeper"   : "timekeeper",
+    "radio_1x32"    : "radio",
+    "radio_2x32"    : "radio",
+    "radio_8x32"    : "radio",
+    "x300_radio"    : "radio",
+}
+
 
 # Adapted from code found at
 # https://stackoverflow.com/questions/5121931/
@@ -112,6 +144,13 @@ def expand_io_port_desc(io_ports, signatures):
     """
     for io_port in io_ports.values():
         wires = []
+        if io_port["type"] in deprecated_port_type_map:
+            logging.warning(
+                "The IO signature type '" + io_port["type"] +
+                "' has been deprecated. Please update your block YAML to use '" +
+                deprecated_port_type_map[io_port["type"]] + "'."
+            )
+            io_port["type"] = deprecated_port_type_map[io_port["type"]]
         for signature in signatures[io_port["type"]]["ports"]:
             width = signature.get("width", 1)
             wire_type = signature.get("type", None)
@@ -177,6 +216,8 @@ class ImageBuilderConfig:
         self.__dict__.update(**config)
         self.blocks = blocks
         self.device = device
+        self._check_configuration()
+        self._check_deprecated_signatures()
         self._update_sep_defaults()
         self._set_indices()
         self._collect_noc_ports()
@@ -184,6 +225,46 @@ class ImageBuilderConfig:
         self._collect_clocks()
         self.pick_connections()
         self.pick_clk_domains()
+
+    def _check_deprecated_signatures(self):
+        """
+        Check if the configuration uses deprecated IO signatures or block
+        descriptions.
+        """
+        # Go through blocks and look for any deprecated descriptions
+        for name, block in self.noc_blocks.items():
+            desc = block['block_desc']
+            if desc in deprecated_block_yml_map:
+                logging.warning(
+                    "The block description '" + desc +
+                    "' has been deprecated. Please update your image to use '" +
+                    deprecated_block_yml_map[desc] + "'."
+                )
+                # Override the block with the new version
+                block['block_desc'] = deprecated_block_yml_map[desc]
+        # Go through port connections and look for deprecated names
+        for con in self.connections:
+            for port in ('srcport', 'dstport'):
+                if con[port] in deprecated_port_name_map:
+                    logging.warning(
+                        "The port name '" + con[port] + "' has been deprecated. "
+                        "Please update your image to use '" +
+                        deprecated_port_name_map[con[port]] + "'."
+                    )
+                    # Override the name with the new version
+                    con[port] = deprecated_port_name_map[con[port]]
+
+    def _check_configuration(self):
+        """
+        Do plausibility checks on the current configuration
+        """
+        logging.info("Plausibility checks on the current configuration")
+        failure = None
+        if not any([bool(sep["ctrl"]) for sep in self.stream_endpoints.values()]):
+            failure = "At least one streaming endpoint needs to have ctrl enabled"
+        if failure:
+            logging.error(failure)
+            raise ValueError(failure)
 
     def _update_sep_defaults(self):
         """
@@ -222,7 +303,7 @@ class ImageBuilderConfig:
                 setattr(desc, "parameters", {})
             if "parameters" not in block:
                 block["parameters"] = OrderedDict()
-            for key in block["parameters"].keys():
+            for key in list(block["parameters"].keys()):
                 if key not in desc.parameters:
                     logging.error("Unknown parameter %s for block %s", key, name)
                     del block["parameters"][key]
@@ -537,6 +618,10 @@ def convert_to_image_config(grc, grc_config_path):
         result["noc_blocks"][block["name"]] = {
             "block_desc": block["parameters"]["desc"]
         }
+        if "nports" in block["parameters"]:
+            result["noc_blocks"][block["name"]]["parameters"] = {
+                "NUM_PORTS": block["parameters"]["nports"]
+            }
 
     device_clocks = {
         port["id"]: port for port in grc_blocks[device['id']]["outputs"]
@@ -589,7 +674,7 @@ def collect_module_paths(config_path, include_paths):
 
 def read_block_descriptions(signatures, *paths):
     """
-    Recursive search all pathes for block definitions.
+    Recursive search all paths for block definitions.
     :param signatures: signature passed to IOConfig initialization
     :param paths: paths to be searched
     :return: dictionary of noc blocks. Key is filename of the block, value
@@ -602,7 +687,10 @@ def read_block_descriptions(signatures, *paths):
                 if re.match(r".*\.yml$", filename):
                     with open(os.path.join(root, filename)) as stream:
                         block = ordered_load(stream)
-                        if "schema" in block and \
+                        if filename in deprecated_block_yml_map:
+                            logging.warning("Skipping deprecated block description "
+                                "%s (%s).", filename, os.path.normpath(root))
+                        elif "schema" in block and \
                                 block["schema"] == "rfnoc_modtool_args":
                             logging.info("Adding block description from "
                                          "%s (%s).", filename, os.path.normpath(root))
